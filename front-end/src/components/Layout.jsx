@@ -1,25 +1,26 @@
 import { useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { FiGrid, FiPlusCircle, FiClock, FiCheckSquare, FiUsers, FiBriefcase, FiTag, FiBarChart2, FiLogOut, FiMenu, FiCalendar } from "react-icons/fi";
 import { useAuth } from "../context/AuthContext";
 
 const menus = {
   employee: [
-    { to: "/dashboard", label: "Dashboard" },
-    { to: "/apply", label: "Apply Leave" },
-    { to: "/history", label: "My History" },
+    { to: "/dashboard", label: "Dashboard", icon: <FiGrid /> },
+    { to: "/apply", label: "Apply Leave", icon: <FiPlusCircle /> },
+    { to: "/history", label: "My History", icon: <FiClock /> },
   ],
   manager: [
-    { to: "/dashboard", label: "Dashboard" },
-    { to: "/apply", label: "Apply Leave" },
-    { to: "/history", label: "My History" },
-    { to: "/approvals", label: "Team Requests" },
+    { to: "/dashboard", label: "Dashboard", icon: <FiGrid /> },
+    { to: "/apply", label: "Apply Leave", icon: <FiPlusCircle /> },
+    { to: "/history", label: "My History", icon: <FiClock /> },
+    { to: "/approvals", label: "Team Requests", icon: <FiCheckSquare /> },
   ],
   admin: [
-    { to: "/dashboard", label: "Dashboard" },
-    { to: "/users", label: "Users" },
-    { to: "/departments", label: "Departments" },
-    { to: "/leave-types", label: "Leave Types" },
-    { to: "/reports", label: "Reports" },
+    { to: "/dashboard", label: "Dashboard", icon: <FiGrid /> },
+    { to: "/users", label: "Users", icon: <FiUsers /> },
+    { to: "/departments", label: "Departments", icon: <FiBriefcase /> },
+    { to: "/leave-types", label: "Leave Types", icon: <FiTag /> },
+    { to: "/reports", label: "Reports", icon: <FiBarChart2 /> },
   ],
 };
 
@@ -35,21 +36,38 @@ export default function Layout() {
 
   return (
     <div className="app">
+      <div className={`overlay ${open ? "show" : ""}`} onClick={() => setOpen(false)} />
       <aside className={`sidebar ${open ? "open" : ""}`}>
-        <h2 className="brand">Leave Manager</h2>
+      <div className="brand">
+    <span className="brand-logo"><FiCalendar /></span>
+        <div className="brand-text">
+            <strong>Staff Leave</strong>
+            <small>Management System</small>
+        </div>
+    </div>
         <nav>
           {menus[user.role].map((m) => (
             <NavLink key={m.to} to={m.to} onClick={() => setOpen(false)}>
-              {m.label}
+              {m.icon} {m.label}
             </NavLink>
           ))}
         </nav>
       </aside>
+
       <div className="main">
         <header className="topbar">
-          <button className="menu-btn" onClick={() => setOpen(!open)}>☰</button>
-          <span>{user.name} ({user.role})</span>
-          <button className="btn btn-outline" onClick={handleLogout}>Logout</button>
+          <button className="menu-btn" onClick={() => setOpen(!open)}><FiMenu /></button>
+          <div className="topbar-spacer" />
+          <div className="user-chip">
+            <div className="avatar">{user.name.charAt(0)}</div>
+            <div className="info">
+              <div className="name">{user.name}</div>
+              <div className="role">{user.role}</div>
+            </div>
+          </div>
+          <button className="btn btn-outline btn-sm" onClick={handleLogout}>
+            <FiLogOut /> Logout
+          </button>
         </header>
         <main className="content">
           <Outlet />

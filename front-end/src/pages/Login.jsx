@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { FiCalendar } from "react-icons/fi";
 import { useAuth } from "../context/AuthContext";
 
 export default function Login() {
@@ -32,32 +33,47 @@ export default function Login() {
 
   return (
     <div className="login-page">
-      <form className="card login-box" onSubmit={handleSubmit} noValidate>
-        <h1>Staff Leave Management</h1>
-        <p className="sub">Sign in to continue</p>
-        {serverError && <div className="alert alert-error">{serverError}</div>}
-
-        <div className="form-group">
-          <label>Email</label>
-          <input name="email" type="email" value={form.email} onChange={handleChange}
-                 className={errors.email ? "invalid" : ""} placeholder="name@company.com" />
-          {errors.email && <div className="error-text">{errors.email}</div>}
+      <div className="login-hero">
+        <div className="hero-content">
+          <div className="logo-box"><FiCalendar /></div>
+          <h1>Staff Leave Management</h1>
+          <p>Apply, approve and track leave in one simple place.</p>
+          <ul>
+            <li>Live leave balance</li>
+            <li>Quick manager approvals</li>
+            <li>Email notifications</li>
+          </ul>
         </div>
+      </div>
 
-        <div className="form-group">
-          <label>Password</label>
-          <input name="password" type="password" value={form.password} onChange={handleChange}
-                 className={errors.password ? "invalid" : ""} placeholder="••••••" />
-          {errors.password && <div className="error-text">{errors.password}</div>}
-        </div>
+      <div className="login-panel">
+        <form className="login-box" onSubmit={handleSubmit} noValidate>
+          <h2>Welcome back</h2>
+          <p className="sub">Sign in to your account</p>
+          {serverError && <div className="alert alert-error">{serverError}</div>}
 
-        <button className="btn btn-full" type="submit">Login</button>
+          <div className="form-group">
+            <label>Email</label>
+            <input name="email" type="email" value={form.email} onChange={handleChange}
+                   className={errors.email ? "invalid" : ""} placeholder="name@company.com" />
+            {errors.email && <div className="error-text">{errors.email}</div>}
+          </div>
 
-        <div className="demo">
-          Demo accounts (password 123456):<br />
-          employee@company.com · manager@company.com · admin@company.com
-        </div>
-      </form>
+          <div className="form-group">
+            <label>Password</label>
+            <input name="password" type="password" value={form.password} onChange={handleChange}
+                   className={errors.password ? "invalid" : ""} placeholder="Enter your password" />
+            {errors.password && <div className="error-text">{errors.password}</div>}
+          </div>
+
+          <button className="btn btn-full" type="submit">Sign in</button>
+
+          <div className="demo">
+            Demo accounts (password 123456):<br />
+            employee@company.com<br />manager@company.com<br />admin@company.com
+          </div>
+        </form>
+      </div>
     </div>
   );
 }
