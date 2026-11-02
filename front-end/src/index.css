@@ -75,3 +75,9 @@ th { background: #f9fafb; }
   .menu-btn { display: block; }
   .content { padding: 16px; }
 }
+
+.filters { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+.filters select { padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; background: #fff; }
+.btn-sm { padding: 5px 12px; font-size: 12px; }
+.btn-danger { background: var(--danger); }
+.btn-danger:hover { background: #b91c1c; }
