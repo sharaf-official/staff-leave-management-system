@@ -81,3 +81,13 @@ th { background: #f9fafb; }
 .btn-sm { padding: 5px 12px; font-size: 12px; }
 .btn-danger { background: var(--danger); }
 .btn-danger:hover { background: #b91c1c; }
+
+.form-card { max-width: 560px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.info-box { background: #eff6ff; color: var(--primary-dark); padding: 10px 14px; border-radius: 6px; margin-bottom: 16px; font-size: 14px; }
+@media (max-width: 480px) { .form-row { grid-template-columns: 1fr; } }
+.filters { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+.filters select { padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; background: #fff; }
+.btn-sm { padding: 5px 12px; font-size: 12px; }
+.btn-danger { background: var(--danger); }
+.btn-danger:hover { background: #b91c1c; }
