@@ -1,7 +1,13 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FiCalendar } from "react-icons/fi";
+import { FiCalendar, FiEye, FiEyeOff } from "react-icons/fi";
 import { useAuth } from "../context/AuthContext";
+
+const demoAccounts = [
+  { label: "Employee", email: "employee@company.com" },
+  { label: "Manager", email: "manager@company.com" },
+  { label: "Admin", email: "admin@company.com" },
+];
 
 export default function Login() {
   const { login } = useAuth();
@@ -9,6 +15,8 @@ export default function Login() {
   const [form, setForm] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState({});
   const [serverError, setServerError] = useState("");
+  const [info, setInfo] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const validate = () => {
     const e = {};
@@ -19,38 +27,49 @@ export default function Login() {
     return e;
   };
 
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+    setServerError("");
+  };
+
+  const fillDemo = (email) => {
+    setForm({ email, password: "123456" });
+    setErrors({});
+    setServerError("");
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     const v = validate();
     setErrors(v);
     setServerError("");
+    setInfo("");
     if (Object.keys(v).length > 0) return;
     if (login(form.email, form.password)) navigate("/dashboard");
     else setServerError("Invalid email or password");
   };
 
   return (
-    <div className="login-page">
-      <div className="login-hero">
-        <div className="hero-content">
-          <div className="logo-box"><FiCalendar /></div>
-          <h1>Staff Leave Management</h1>
-          <p>Apply, approve and track leave in one simple place.</p>
-          <ul>
-            <li>Live leave balance</li>
-            <li>Quick manager approvals</li>
-            <li>Email notifications</li>
-          </ul>
-        </div>
-      </div>
+    <div className="auth-page">
+      <div className="auth-stage">
+        <span className="shape zig"><i></i><i></i></span>
+        <span className="shape zig small"><i></i><i></i></span>
+        <span className="shape ring ring-a"></span>
+        <span className="shape ring ring-b"></span>
+        <span className="shape loop"></span>
+        <span className="shape blob"></span>
+        <span className="shape wave w1"></span>
+        <span className="shape wave w2"></span>
 
-      <div className="login-panel">
-        <form className="login-box" onSubmit={handleSubmit} noValidate>
-          <h2>Welcome back</h2>
-          <p className="sub">Sign in to your account</p>
+        <form className="auth-card" onSubmit={handleSubmit} noValidate>
+          <div className="auth-brand">
+            <span className="logo-mini"><FiCalendar /></span>
+            <span>Staff Leave Management System</span>
+          </div>
+          <h2>Login</h2>
+
           {serverError && <div className="alert alert-error">{serverError}</div>}
+          {info && <div className="auth-info">{info}</div>}
 
           <div className="form-group">
             <label>Email</label>
@@ -61,17 +80,36 @@ export default function Login() {
 
           <div className="form-group">
             <label>Password</label>
-            <input name="password" type="password" value={form.password} onChange={handleChange}
-                   className={errors.password ? "invalid" : ""} placeholder="Enter your password" />
+            <div className="pw-wrap">
+              <input name="password" type={showPassword ? "text" : "password"} value={form.password}
+                     onChange={handleChange} className={errors.password ? "invalid" : ""}
+                     placeholder="Enter your password" />
+              <button type="button" className="pw-toggle" onClick={() => setShowPassword(!showPassword)}
+                      aria-label="Show or hide password">
+                {showPassword ? <FiEyeOff /> : <FiEye />}
+              </button>
+            </div>
             {errors.password && <div className="error-text">{errors.password}</div>}
           </div>
 
-          <button className="btn btn-full" type="submit">Sign in</button>
-
-          <div className="demo">
-            Demo accounts (password 123456):<br />
-            employee@company.com<br />manager@company.com<br />admin@company.com
+          <div className="auth-row">
+            <button type="button" className="link-btn"
+                    onClick={() => setInfo("Please contact your administrator to reset your password.")}>
+              Forgot password?
+            </button>
           </div>
+
+          <button className="auth-btn" type="submit">Sign in</button>
+
+          <div className="auth-divider">or try a demo account</div>
+          <div className="demo-chips">
+            {demoAccounts.map((d) => (
+              <button key={d.label} type="button" className="demo-chip" onClick={() => fillDemo(d.email)}>
+                {d.label}
+              </button>
+            ))}
+          </div>
+          <p className="demo-note">Demo password: 123456</p>
         </form>
       </div>
     </div>
