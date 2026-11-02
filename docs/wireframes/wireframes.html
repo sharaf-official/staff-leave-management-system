@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Staff Leave Management System - Wireframes</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: Arial, Helvetica, sans-serif; background: #e9ecef; margin: 0; padding: 24px; color: #333; }
+  h1 { margin: 0 0 4px; font-size: 22px; }
+  p.sub { margin: 0 0 24px; color: #666; font-size: 14px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(460px, 1fr)); gap: 24px; }
+  .card { background: #fff; border: 1px solid #bbb; border-radius: 6px; padding: 12px; }
+  .card h2 { font-size: 14px; margin: 0 0 8px; color: #555; }
+  .screen { border: 2px solid #888; background: #fafafa; min-height: 330px; }
+  .topbar { display: flex; justify-content: space-between; align-items: center; background: #ddd; border-bottom: 2px solid #888; padding: 8px 10px; font-size: 12px; font-weight: bold; }
+  .nav span { margin-left: 12px; font-weight: normal; }
+  .body { padding: 12px; }
+  .box { border: 1.5px dashed #999; background: #f0f0f0; padding: 8px; font-size: 12px; text-align: center; color: #666; }
+  .btn { display: inline-block; border: 2px solid #666; background: #ccc; padding: 6px 14px; font-size: 12px; font-weight: bold; margin: 6px 6px 0 0; }
+  .btn.sec { background: #fff; }
+  .input { border: 1.5px solid #999; background: #fff; padding: 7px; font-size: 12px; color: #999; margin-bottom: 8px; }
+  label { font-size: 11px; font-weight: bold; display: block; margin-bottom: 3px; }
+  .row { display: flex; gap: 10px; }
+  .row > * { flex: 1; }
+  table { width: 100%; border-collapse: collapse; font-size: 11px; background: #fff; }
+  th, td { border: 1px solid #aaa; padding: 5px 6px; text-align: left; }
+  th { background: #ddd; }
+  .badge { border: 1px solid #777; padding: 1px 6px; border-radius: 8px; font-size: 10px; }
+  .center { max-width: 260px; margin: 20px auto; }
+  .stat { text-align: center; padding: 10px 4px; }
+  .stat b { font-size: 20px; display: block; color: #333; }
+</style>
+</head>
+<body>
+<h1>Staff Leave Management System: Low-Fidelity Wireframes</h1>
+<p class="sub">Evaluation 1 – Initial UI/UX design. Desktop layouts; the final React UI will be responsive (sidebar collapses to a menu on mobile).</p>
+
+<div class="grid">
+
+<!-- 1. Login -->
+<div class="card">
+  <h2>1. Login</h2>
+  <div class="screen">
+    <div class="topbar"><span>LOGO · Staff Leave Management</span></div>
+    <div class="body">
+      <div class="center">
+        <div class="box" style="margin-bottom:12px">Welcome back</div>
+        <label>Email</label><div class="input">name@company.com</div>
+        <label>Password</label><div class="input">••••••••</div>
+        <span class="btn">Login</span>
+        <div style="font-size:11px;margin-top:10px;color:#777">Forgot password? Contact admin</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 2. Employee Dashboard -->
+<div class="card">
+  <h2>2. Employee Dashboard</h2>
+  <div class="screen">
+    <div class="topbar"><span>LOGO</span><span class="nav"><span>Dashboard</span><span>Apply Leave</span><span>History</span><span>Profile ▾</span></span></div>
+    <div class="body">
+      <div class="row" style="margin-bottom:10px">
+        <div class="box stat"><b>14</b>Annual left</div>
+        <div class="box stat"><b>7</b>Sick left</div>
+        <div class="box stat"><b>2</b>Pending</div>
+      </div>
+      <span class="btn">+ Apply for Leave</span>
+      <div style="font-size:12px;font-weight:bold;margin:12px 0 6px">Recent requests</div>
+      <table>
+        <tr><th>Type</th><th>From</th><th>To</th><th>Days</th><th>Status</th></tr>
+        <tr><td>Annual</td><td>12 Nov</td><td>14 Nov</td><td>3</td><td><span class="badge">Pending</span></td></tr>
+        <tr><td>Sick</td><td>02 Oct</td><td>02 Oct</td><td>1</td><td><span class="badge">Approved</span></td></tr>
+        <tr><td>Casual</td><td>18 Sep</td><td>18 Sep</td><td>1</td><td><span class="badge">Rejected</span></td></tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- 3. Apply Leave -->
+<div class="card">
+  <h2>3. Apply for Leave</h2>
+  <div class="screen">
+    <div class="topbar"><span>LOGO</span><span class="nav"><span>Dashboard</span><span>Apply Leave</span><span>History</span><span>Profile ▾</span></span></div>
+    <div class="body">
+      <div style="font-size:13px;font-weight:bold;margin-bottom:8px">Apply for Leave</div>
+      <label>Leave type</label><div class="input">Select leave type ▾</div>
+      <div class="row">
+        <div><label>Start date</label><div class="input">dd/mm/yyyy</div></div>
+        <div><label>End date</label><div class="input">dd/mm/yyyy</div></div>
+      </div>
+      <div class="box" style="margin-bottom:8px">Total days: 3 · Balance after: 11</div>
+      <label>Reason</label><div class="input" style="height:50px">Enter reason...</div>
+      <span class="btn">Submit</span><span class="btn sec">Cancel</span>
+    </div>
+  </div>
+</div>
+
+<!-- 4. History -->
+<div class="card">
+  <h2>4. My Leave History</h2>
+  <div class="screen">
+    <div class="topbar"><span>LOGO</span><span class="nav"><span>Dashboard</span><span>Apply Leave</span><span>History</span><span>Profile ▾</span></span></div>
+    <div class="body">
+      <div class="row" style="margin-bottom:8px">
+        <div class="input">Status ▾</div><div class="input">Leave type ▾</div><div class="input">Year ▾</div>
+      </div>
+      <table>
+        <tr><th>#</th><th>Type</th><th>Dates</th><th>Days</th><th>Status</th><th>Action</th></tr>
+        <tr><td>1</td><td>Annual</td><td>12–14 Nov</td><td>3</td><td><span class="badge">Pending</span></td><td>Cancel</td></tr>
+        <tr><td>2</td><td>Sick</td><td>02 Oct</td><td>1</td><td><span class="badge">Approved</span></td><td>–</td></tr>
+        <tr><td>3</td><td>Casual</td><td>18 Sep</td><td>1</td><td><span class="badge">Rejected</span></td><td>View</td></tr>
+        <tr><td>4</td><td>Annual</td><td>05–06 Aug</td><td>2</td><td><span class="badge">Approved</span></td><td>–</td></tr>
+      </table>
+      <div style="font-size:11px;margin-top:8px;color:#777">◀ 1 2 3 ▶</div>
+    </div>
+  </div>
+</div>
+
+<!-- 5. Manager approvals -->
+<div class="card">
+  <h2>5. Manager: Pending Approvals</h2>
+  <div class="screen">
+    <div class="topbar"><span>LOGO</span><span class="nav"><span>Dashboard</span><span>Team Requests</span><span>My Leave</span><span>Profile ▾</span></span></div>
+    <div class="body">
+      <div style="font-size:13px;font-weight:bold;margin-bottom:8px">Pending requests (4)</div>
+      <table>
+        <tr><th>Employee</th><th>Type</th><th>Dates</th><th>Days</th><th>Reason</th><th>Action</th></tr>
+        <tr><td>A. Perera</td><td>Annual</td><td>12–14 Nov</td><td>3</td><td>Family trip</td><td>✔ ✖</td></tr>
+        <tr><td>K. Silva</td><td>Sick</td><td>10 Nov</td><td>1</td><td>Fever</td><td>✔ ✖</td></tr>
+      </table>
+      <div class="box" style="margin-top:10px;text-align:left">
+        <b>Review request</b><br>Comment: <span class="input" style="display:inline-block;width:70%;margin:4px 0">Optional comment...</span><br>
+        <span class="btn">Approve</span><span class="btn sec">Reject</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 6. Admin -->
+<div class="card">
+  <h2>6. Admin: Manage Staff</h2>
+  <div class="screen">
+    <div class="topbar"><span>LOGO</span><span class="nav"><span>Dashboard</span><span>Users</span><span>Departments</span><span>Leave Types</span><span>Reports</span></span></div>
+    <div class="body">
+      <div class="row" style="margin-bottom:8px;align-items:center">
+        <div class="input" style="margin:0">Search staff...</div>
+        <div style="text-align:right"><span class="btn">+ Add User</span></div>
+      </div>
+      <table>
+        <tr><th>Name</th><th>Email</th><th>Role</th><th>Dept</th><th>Actions</th></tr>
+        <tr><td>A. Perera</td><td>a@co.lk</td><td>Employee</td><td>IT</td><td>Edit · Delete</td></tr>
+        <tr><td>N. Fernando</td><td>n@co.lk</td><td>Manager</td><td>IT</td><td>Edit · Delete</td></tr>
+        <tr><td>S. Kumar</td><td>s@co.lk</td><td>Admin</td><td>HR</td><td>Edit · Delete</td></tr>
+      </table>
+      <div style="font-size:11px;margin-top:8px;color:#777">◀ 1 2 3 ▶</div>
+    </div>
+  </div>
+</div>
+
+</div>
+</body>
+</html>
