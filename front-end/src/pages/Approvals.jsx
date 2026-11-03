@@ -90,7 +90,7 @@ export default function Approvals() {
 
       {selected && (
         <div className="rv-overlay" onClick={closeReview}>
-          <div className="rv-modal" onClick={(e) => e.stopPropagation()}>
+          <div className="rv-modal" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
             <h3>Review leave request</h3>
             <div className="rv-info">
               <p><b>Employee:</b> {selected.employee}</p>

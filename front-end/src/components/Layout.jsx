@@ -1,8 +1,14 @@
-import { useEffect, useState } from "react";
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
-import { FiGrid, FiPlusCircle, FiClock, FiCheckSquare, FiUsers, FiBriefcase, FiTag, FiBarChart2, FiLogOut, FiMenu, FiCalendar, FiUser } from "react-icons/fi";
+import { useEffect, useRef, useState } from "react";
+import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
+import {
+  FiGrid, FiPlusCircle, FiClock, FiCheckSquare, FiUsers, FiBriefcase, FiTag, FiBarChart2,
+  FiLogOut, FiMenu, FiCalendar, FiUser, FiMoon, FiSun,
+} from "react-icons/fi";
 import { useAuth } from "../context/AuthContext";
 import Modal from "./Modal";
+import NotificationBell from "./NotificationBell";
+import { applyTheme, getTheme } from "../utils/theme";
+import { getAvatar } from "../utils/avatar";
 
 const profileLink = { to: "/profile", label: "My Profile", icon: <FiUser /> };
 
@@ -33,15 +39,70 @@ const menus = {
 export default function Layout() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [open, setOpen] = useState(false);
   const [showLogout, setShowLogout] = useState(false);
+  const [theme, setTheme] = useState(getTheme);
+  const [photo, setPhoto] = useState(() => getAvatar(user.email));
+  const gPressed = useRef(false);
 
-  // Esc key amukkina popup close aagum
+  // theme
   useEffect(() => {
-    const onKey = (e) => e.key === "Escape" && setShowLogout(false);
+    applyTheme(theme);
+  }, [theme]);
+
+  // profile photo changes
+  useEffect(() => {
+    const refresh = () => setPhoto(getAvatar(user.email));
+    window.addEventListener("avatar-changed", refresh);
+    return () => window.removeEventListener("avatar-changed", refresh);
+  }, [user.email]);
+
+  // keyboard shortcuts
+  useEffect(() => {
+    let timer;
+    const allowed = (path) => menus[user.role].some((m) => m.to === path);
+
+    const onKey = (e) => {
+      if (e.key === "Escape") {
+        setShowLogout(false);
+        setOpen(false);
+        document.querySelector(".rv-overlay")?.click(); // close page popups
+        return;
+      }
+      const tag = e.target.tagName;
+      if (["INPUT", "TEXTAREA", "SELECT"].includes(tag) || e.ctrlKey || e.metaKey || e.altKey) return;
+
+      const key = e.key.toLowerCase();
+      if (gPressed.current) {
+        gPressed.current = false;
+        clearTimeout(timer);
+        const map = {
+          d: "/dashboard",
+          a: "/apply",
+          h: "/history",
+          p: "/profile",
+          r: user.role === "manager" ? "/approvals" : "/reports",
+          u: "/users",
+        };
+        const path = map[key];
+        if (path && allowed(path)) navigate(path);
+        return;
+      }
+      if (key === "g") {
+        gPressed.current = true;
+        timer = setTimeout(() => (gPressed.current = false), 1000);
+      } else if (key === "t") {
+        setTheme((t) => (t === "dark" ? "light" : "dark"));
+      }
+    };
+
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, []);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      clearTimeout(timer);
+    };
+  }, [user.role, navigate]);
 
   const confirmLogout = () => {
     setShowLogout(false);
@@ -51,8 +112,10 @@ export default function Layout() {
 
   return (
     <div className="app">
+      <a href="#main-content" className="skip-link">Skip to main content</a>
+
       <div className={`overlay ${open ? "show" : ""}`} onClick={() => setOpen(false)} />
-      <aside className={`sidebar ${open ? "open" : ""}`}>
+      <aside className={`sidebar ${open ? "open" : ""}`} aria-label="Sidebar">
         <div className="brand">
           <span className="brand-logo"><FiCalendar /></span>
           <div className="brand-text">
@@ -60,7 +123,7 @@ export default function Layout() {
             <small>Management System</small>
           </div>
         </div>
-        <nav>
+        <nav aria-label="Main navigation">
           {menus[user.role].map((m) => (
             <NavLink key={m.to} to={m.to} onClick={() => setOpen(false)}>
               {m.icon} {m.label}
@@ -71,25 +134,46 @@ export default function Layout() {
 
       <div className="main">
         <header className="topbar">
-          <button className="menu-btn" onClick={() => setOpen(!open)}><FiMenu /></button>
-          <div className="topbar-spacer" />
-          <div
-            className="user-chip clickable"
-            title="View profile"
-            onClick={() => navigate("/profile")}
+          <button
+            className="menu-btn"
+            onClick={() => setOpen(!open)}
+            aria-label="Open navigation menu"
+            aria-expanded={open}
           >
-            <div className="avatar">{user.name.charAt(0)}</div>
+            <FiMenu />
+          </button>
+          <div className="topbar-spacer" />
+
+          <button
+            className="round-btn"
+            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+            title="Toggle theme (T)"
+          >
+            {theme === "dark" ? <FiSun /> : <FiMoon />}
+          </button>
+
+          <NotificationBell role={user.role} />
+
+          <button className="user-chip clickable" onClick={() => navigate("/profile")} aria-label="Open my profile">
+            <div className="avatar">
+              {photo ? <img src={photo} alt="" /> : user.name.charAt(0)}
+            </div>
             <div className="info">
               <div className="name">{user.name}</div>
               <div className="role">{user.role}</div>
             </div>
-          </div>
+          </button>
+
           <button className="btn btn-outline btn-sm" onClick={() => setShowLogout(true)}>
             <FiLogOut /> Logout
           </button>
         </header>
-        <main className="content">
-          <Outlet />
+
+        <main className="content" id="main-content" tabIndex={-1}>
+          <div key={location.pathname} className="page-fade">
+            <Outlet />
+          </div>
         </main>
       </div>
 

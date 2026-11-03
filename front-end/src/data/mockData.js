@@ -68,3 +68,21 @@ export const reportData = [
   { id: 9, employee: "S. Kumar", department: "HR", type: "Annual", from: "2026-08-05", to: "2026-08-07", days: 3, status: "Approved" },
   { id: 10, employee: "Ruwan Jayasinghe", department: "HR", type: "Casual", from: "2026-07-10", to: "2026-07-10", days: 1, status: "Approved" },
 ];
+
+export const notificationsByRole = {
+  employee: [
+    { id: 1, type: "success", text: "Your Sick leave on 02 Oct was approved.", time: "2 days ago" },
+    { id: 2, type: "danger", text: "Your Casual leave on 18 Sep was rejected.", time: "1 week ago" },
+    { id: 3, type: "info", text: "Your Annual leave request (12-14 Nov) is awaiting approval.", time: "Today" },
+  ],
+  manager: [
+    { id: 1, type: "info", text: "Amal Perera requested Annual leave (12-14 Nov).", time: "Today" },
+    { id: 2, type: "info", text: "Kamal Silva requested Sick leave (10 Nov).", time: "Today" },
+    { id: 3, type: "info", text: "Nisha Fernando requested Casual leave (18-19 Nov).", time: "Yesterday" },
+  ],
+  admin: [
+    { id: 1, type: "info", text: "3 leave requests are pending across departments.", time: "Today" },
+    { id: 2, type: "success", text: "New user Ruwan Jayasinghe was added.", time: "2 days ago" },
+    { id: 3, type: "info", text: "Monthly leave report is ready to download.", time: "3 days ago" },
+  ],
+};

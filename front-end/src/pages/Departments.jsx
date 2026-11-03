@@ -91,7 +91,7 @@ export default function Departments() {
 
       {showForm && (
         <div className="rv-overlay" onClick={() => setShowForm(false)}>
-          <form className="rv-modal" onClick={(e) => e.stopPropagation()} onSubmit={handleSave} noValidate>
+          <form className="rv-modal" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()} onSubmit={handleSave} noValidate>
             <h3>{editingId === null ? "Add department" : "Edit department"}</h3>
             <div className="us-field">
               <label htmlFor="dname">Department name</label>
@@ -108,7 +108,7 @@ export default function Departments() {
 
       {toDelete && (
         <div className="rv-overlay" onClick={() => setToDelete(null)}>
-          <div className="rv-modal" onClick={(e) => e.stopPropagation()}>
+          <div className="rv-modal" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
             <h3>Delete department?</h3>
             <p>Are you sure you want to delete <b>{toDelete.name}</b>?</p>
             <div className="rv-actions">

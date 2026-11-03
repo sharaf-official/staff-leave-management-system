@@ -91,7 +91,7 @@ export default function LeaveTypes() {
 
       {showForm && (
         <div className="rv-overlay" onClick={() => setShowForm(false)}>
-          <form className="rv-modal" onClick={(e) => e.stopPropagation()} onSubmit={handleSave} noValidate>
+          <form className="rv-modal" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()} onSubmit={handleSave} noValidate>
             <h3>{editingId === null ? "Add leave type" : "Edit leave type"}</h3>
             <div className="us-field">
               <label htmlFor="lname">Leave type name</label>
@@ -113,7 +113,7 @@ export default function LeaveTypes() {
 
       {toDelete && (
         <div className="rv-overlay" onClick={() => setToDelete(null)}>
-          <div className="rv-modal" onClick={(e) => e.stopPropagation()}>
+          <div className="rv-modal" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
             <h3>Delete leave type?</h3>
             <p>Are you sure you want to delete <b>{toDelete.name}</b> leave?</p>
             <div className="rv-actions">

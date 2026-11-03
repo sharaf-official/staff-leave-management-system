@@ -1,11 +1,14 @@
 import { useState } from "react";
 import { FiPlus, FiEdit2, FiTrash2, FiSearch } from "react-icons/fi";
 import { staffList, departments } from "../data/mockData";
+import useLoading from "../hooks/useLoading";
+import { TableSkeleton } from "../components/Skeleton";
 
 const emptyForm = { name: "", email: "", role: "employee", department: "IT", password: "" };
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function Users() {
+  const loading = useLoading(600);
   const [users, setUsers] = useState(staffList);
   const [search, setSearch] = useState("");
   const [form, setForm] = useState(emptyForm);
@@ -112,44 +115,49 @@ export default function Users() {
 
         {message && <div className="rv-toast">{message}</div>}
 
-        <div className="table-wrap">
-          <table>
-            <thead>
-              <tr><th>Name</th><th>Email</th><th>Role</th><th>Department</th><th>Actions</th></tr>
-            </thead>
-            <tbody>
-              {shown.length === 0 && (
-                <tr><td colSpan="5" style={{ textAlign: "center", color: "var(--muted)" }}>No users found.</td></tr>
-              )}
-              {shown.map((u) => (
-                <tr key={u.id}>
-                  <td>{u.name}</td>
-                  <td>{u.email}</td>
-                  <td><span className={`role-badge role-${u.role}`}>{u.role}</span></td>
-                  <td>{u.department}</td>
-                  <td>
-                    <div className="us-actions">
-                      <button className="icon-btn" title="Edit" onClick={() => openEdit(u)}><FiEdit2 /></button>
-                      <button
-                        className="icon-btn danger"
-                        title={u.role === "admin" ? "Admin cannot be deleted" : "Delete"}
-                        disabled={u.role === "admin"}
-                        onClick={() => setToDelete(u)}
-                      >
-                        <FiTrash2 />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+          {loading ? (
+          <TableSkeleton rows={5} cols={5} />
+        ) : (
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Name</th><th>Email</th><th>Role</th><th>Department</th><th>Actions</th></tr>
+              </thead>
+              <tbody>
+                {shown.length === 0 && (
+                  <tr><td colSpan="5" style={{ textAlign: "center", color: "var(--muted)" }}>No users found.</td></tr>
+                )}
+                {shown.map((u) => (
+                  <tr key={u.id}>
+                    <td>{u.name}</td>
+                    <td>{u.email}</td>
+                    <td><span className={`role-badge role-${u.role}`}>{u.role}</span></td>
+                    <td>{u.department}</td>
+                    <td>
+                      <div className="us-actions">
+                        <button className="icon-btn" title="Edit" aria-label={`Edit ${u.name}`} onClick={() => openEdit(u)}><FiEdit2 /></button>
+                        <button
+                          className="icon-btn danger"
+                          title={u.role === "admin" ? "Admin cannot be deleted" : "Delete"}
+                          aria-label={`Delete ${u.name}`}
+                          disabled={u.role === "admin"}
+                          onClick={() => setToDelete(u)}
+                        >
+                          <FiTrash2 />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       {showForm && (
         <div className="rv-overlay" onClick={() => setShowForm(false)}>
-          <form className="rv-modal" onClick={(e) => e.stopPropagation()} onSubmit={handleSave} noValidate>
+          <form className="rv-modal" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()} onSubmit={handleSave} noValidate>
             <h3>{editingId === null ? "Add new user" : "Edit user"}</h3>
 
             <div className="us-field">
@@ -199,7 +207,7 @@ export default function Users() {
 
       {toDelete && (
         <div className="rv-overlay" onClick={() => setToDelete(null)}>
-          <div className="rv-modal" onClick={(e) => e.stopPropagation()}>
+          <div className="rv-modal" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
             <h3>Delete user?</h3>
             <p>Are you sure you want to delete <b>{toDelete.name}</b>? This action cannot be undone.</p>
             <div className="rv-actions">
