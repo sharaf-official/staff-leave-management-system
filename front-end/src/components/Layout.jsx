@@ -1,20 +1,24 @@
 import { useEffect, useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
-import { FiGrid, FiPlusCircle, FiClock, FiCheckSquare, FiUsers, FiBriefcase, FiTag, FiBarChart2, FiLogOut, FiMenu, FiCalendar } from "react-icons/fi";
+import { FiGrid, FiPlusCircle, FiClock, FiCheckSquare, FiUsers, FiBriefcase, FiTag, FiBarChart2, FiLogOut, FiMenu, FiCalendar, FiUser } from "react-icons/fi";
 import { useAuth } from "../context/AuthContext";
 import Modal from "./Modal";
+
+const profileLink = { to: "/profile", label: "My Profile", icon: <FiUser /> };
 
 const menus = {
   employee: [
     { to: "/dashboard", label: "Dashboard", icon: <FiGrid /> },
     { to: "/apply", label: "Apply Leave", icon: <FiPlusCircle /> },
     { to: "/history", label: "My History", icon: <FiClock /> },
+    profileLink,
   ],
   manager: [
     { to: "/dashboard", label: "Dashboard", icon: <FiGrid /> },
     { to: "/apply", label: "Apply Leave", icon: <FiPlusCircle /> },
     { to: "/history", label: "My History", icon: <FiClock /> },
     { to: "/approvals", label: "Team Requests", icon: <FiCheckSquare /> },
+    profileLink,
   ],
   admin: [
     { to: "/dashboard", label: "Dashboard", icon: <FiGrid /> },
@@ -22,6 +26,7 @@ const menus = {
     { to: "/departments", label: "Departments", icon: <FiBriefcase /> },
     { to: "/leave-types", label: "Leave Types", icon: <FiTag /> },
     { to: "/reports", label: "Reports", icon: <FiBarChart2 /> },
+    profileLink,
   ],
 };
 
@@ -68,7 +73,11 @@ export default function Layout() {
         <header className="topbar">
           <button className="menu-btn" onClick={() => setOpen(!open)}><FiMenu /></button>
           <div className="topbar-spacer" />
-          <div className="user-chip">
+          <div
+            className="user-chip clickable"
+            title="View profile"
+            onClick={() => navigate("/profile")}
+          >
             <div className="avatar">{user.name.charAt(0)}</div>
             <div className="info">
               <div className="name">{user.name}</div>

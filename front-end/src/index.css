@@ -354,3 +354,25 @@ tbody tr { transition: background .12s; }
 .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 .cards + .card { margin-top: 16px; }
 .card + .card { margin-top: 16px; }
+
+/* profile */
+.pf-grid { display: grid; grid-template-columns: 1fr 1.4fr; gap: 16px; align-items: start; }
+@media (max-width: 900px) { .pf-grid { grid-template-columns: 1fr; } }
+.pf-profile { text-align: center; }
+.pf-profile h3 { margin: 12px 0 8px; }
+.pf-avatar { width: 84px; height: 84px; margin: 0 auto; border-radius: 50%; background: linear-gradient(135deg, #4f46e5, #8b5cf6); color: #fff; font-size: 30px; font-weight: 700; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 20px rgba(79, 70, 229, 0.35); }
+.pf-details { margin-top: 18px; text-align: left; }
+.pf-details > div { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-top: 1px solid #e2e8f0; font-size: 14px; }
+.pf-details span { color: var(--muted); }
+.pf-details b { word-break: break-all; text-align: right; }
+.pf-input { position: relative; }
+.pf-input input { padding-right: 42px; }
+.pf-eye { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); border: none; background: transparent; cursor: pointer; color: #64748b; padding: 6px; display: flex; }
+.pf-eye:hover { color: var(--primary); }
+.pf-strength { display: flex; align-items: center; gap: 10px; margin: -4px 0 12px; }
+.pf-bars { display: flex; gap: 4px; flex: 1; }
+.pf-bars span { height: 6px; flex: 1; border-radius: 999px; transition: background 0.25s; }
+.pf-rules { margin: 4px 0 16px; padding-left: 18px; color: var(--muted); font-size: 13px; }
+
+.user-chip.clickable { cursor: pointer; border-radius: 12px; transition: background 0.2s; }
+.user-chip.clickable:hover { background: #eef2ff; }
