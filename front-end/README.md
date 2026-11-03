@@ -127,17 +127,19 @@ The front end currently uses mock data. Password for all accounts: `123456`
 ## 📄 Documentation
 
 See the [`docs`](docs) folder for requirements, diagrams and wireframes.
-
 ## 👨‍💻 Author
 
 **Sharaf Izam**
-HND in Computer Science, Upbright
-GitHub: [@sharaf-official](https://github.com/sharaf-official)
 
+HND in Computer Science · Final Project · Upbright
+
+| | |
+|---|---|
+| 🌐 Portfolio | [www.sharafizam.com](https://www.sharafizam.com) |
+| 💻 GitHub | [@sharaf-official](https://github.com/sharaf-official) |
 ---
-
 <div align="center">
 
-⭐ Built as an academic full-stack project
+⭐ Built as an academic full-stack project · 🌐 [www.sharafizam.com](https://www.sharafizam.com)
 
 </div>
