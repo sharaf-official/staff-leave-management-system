@@ -107,7 +107,7 @@ Open **http://localhost:5173** in your browser.
 
 ## 🔑 Demo Accounts
 
-The front end currently uses mock data. Password for all accounts: `123456`
+The front end currently uses mock data. Password for all demo accounts: `Slms@2026!`
 
 | Role | Email |
 |---|---|

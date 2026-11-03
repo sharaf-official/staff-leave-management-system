@@ -1,7 +1,7 @@
 export const users = [
-  { id: 1, name: "Amal Perera", email: "employee@company.com", password: "123456", role: "employee", department: "IT" },
-  { id: 2, name: "Nimal Fernando", email: "manager@company.com", password: "123456", role: "manager", department: "IT" },
-  { id: 3, name: "Sara Kumar", email: "admin@company.com", password: "123456", role: "admin", department: "HR" },
+  { id: 1, name: "Amal Perera", email: "employee@company.com", password: "Slms@2026!", role: "employee", department: "IT" },
+  { id: 2, name: "Nimal Fernando", email: "manager@company.com", password: "Slms@2026!", role: "manager", department: "IT" },
+  { id: 3, name: "Sara Kumar", email: "admin@company.com", password: "Slms@2026!", role: "admin", department: "HR" },
 ];
 
 export const leaveBalances = [
