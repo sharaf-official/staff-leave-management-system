@@ -1008,3 +1008,8 @@ kbd { background: #f1f5f9; border: 1px solid #cbd5e1; border-bottom-width: 2px; 
   .lg-orb.o1 { width: 180px; height: 180px; top: calc(50% - 250px); left: -30px; }
   .lg-orb.o2 { width: 200px; height: 200px; bottom: calc(50% - 260px); right: -40px; }
 }
+
+/* PNG logo */
+.logo-img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.brand-logo .logo-img { width: 26px; height: 26px; }
+.lg-logo .logo-img { width: 24px; height: 24px; }
