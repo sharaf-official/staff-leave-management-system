@@ -1,22 +1,27 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
-  FiCalendar, FiEye, FiEyeOff, FiAlertCircle, FiLifeBuoy, FiMail, FiPhone, FiX, FiClock,
-  FiUsers, FiUser, FiBriefcase, FiShield, FiChevronUp, FiLock, FiArrowRight,
+  FiEye, FiEyeOff, FiAlertCircle, FiLifeBuoy, FiMail, FiPhone, FiX, FiClock, FiLock,
+  FiUsers, FiUser, FiBriefcase, FiShield, FiChevronUp, FiChevronRight, FiLogIn, FiUserPlus,
+  FiHeadphones, FiLayers, FiSend, FiCheckSquare, FiBarChart2, FiGlobe,
 } from "react-icons/fi";
 import { useAuth } from "../context/AuthContext";
-import { users } from "../data/mockData";
+import { DEMO_ACCOUNTS } from "../data/db";
+import Logo from "../components/Logo";
 
 const REMEMBER_KEY = "remembered-email";
 const APP_VERSION = "1.0.0";
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const TICKS = 48;
 
-// Sample contacts: replace with your organisation's real details
-const supportContacts = [
-  { team: "HR Department", note: "Leave policy, accounts and password resets", email: "hr@company.com", phone: "+94 11 234 5678" },
-  { team: "IT Support", note: "Login problems and technical issues", email: "itsupport@company.com", phone: "+94 11 234 5679" },
-];
+// Public support details shown in the Help popup. Edit them here, in one place.
+const SUPPORT = {
+  email: "leavenest.support@gmail.com",
+  phone: "+94 77 57 31 456", 
+  website: "https://www.sharafizam.com",
+  websiteLabel: "www.sharafizam.com",
+  hours: "Mon - Fri, 9:00 AM - 6:00 PM (Sri Lanka time)",
+};
 
 const demoRoles = [
   { role: "employee", label: "Employee", icon: <FiUser />, color: "#38bdf8" },
@@ -24,9 +29,19 @@ const demoRoles = [
   { role: "admin", label: "Admin", icon: <FiShield />, color: "#fb7185" },
 ];
 
+const points = [
+  { icon: <FiSend />, title: "Apply in seconds", text: "Submit leave requests with instant date and balance checks." },
+  { icon: <FiCheckSquare />, title: "Quick approvals", text: "Managers review, comment and decide in one click." },
+  { icon: <FiBarChart2 />, title: "Clear reports", text: "Admins track leave by team, type and status." },
+];
+
+const isDemoEmail = (value) =>
+  DEMO_ACCOUNTS.some((a) => a.email.toLowerCase() === String(value).trim().toLowerCase());
+
 const readRemembered = () => {
   try {
-    return localStorage.getItem(REMEMBER_KEY) || "";
+    const saved = localStorage.getItem(REMEMBER_KEY) || "";
+    return isDemoEmail(saved) ? "" : saved; // never pre-fill demo accounts
   } catch {
     return "";
   }
@@ -42,6 +57,7 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [showForgot, setShowForgot] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
+  const [showAbout, setShowAbout] = useState(false);
   const [showDemo, setShowDemo] = useState(false);
   const [flash, setFlash] = useState(false);
   const [error, setError] = useState("");
@@ -50,13 +66,18 @@ export default function Login() {
   const demoRef = useRef(null);
   const submitRef = useRef(null);
 
-  // close help popup with Esc
+  // close popups with Esc
   useEffect(() => {
-    if (!showHelp) return;
-    const onKey = (e) => e.key === "Escape" && setShowHelp(false);
+    if (!showHelp && !showAbout) return;
+    const onKey = (e) => {
+      if (e.key === "Escape") {
+        setShowHelp(false);
+        setShowAbout(false);
+      }
+    };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [showHelp]);
+  }, [showHelp, showAbout]);
 
   // close demo panel on outside click / Esc
   useEffect(() => {
@@ -74,7 +95,7 @@ export default function Login() {
   }, [showDemo]);
 
   const fillDemo = (role) => {
-    const account = users.find((u) => u.role === role);
+    const account = DEMO_ACCOUNTS.find((u) => u.role === role);
     if (!account) return;
     setEmail(account.email);
     setPassword(account.password);
@@ -112,9 +133,8 @@ export default function Login() {
         return;
       }
 
-      // Remember me
       try {
-        if (remember) localStorage.setItem(REMEMBER_KEY, email.trim());
+        if (remember && !isDemoEmail(email)) localStorage.setItem(REMEMBER_KEY, email.trim());
         else localStorage.removeItem(REMEMBER_KEY);
       } catch {
         /* storage blocked */
@@ -129,135 +149,144 @@ export default function Login() {
   };
 
   return (
-    <div className="lg-page">
-      {/* animated background */}
-      <div className="lg-bg" aria-hidden="true">
-        <span className="lg-shape lg-pill p1" />
-        <span className="lg-shape lg-pill p2" />
-        <span className="lg-shape lg-pill p3" />
-        <span className="lg-shape lg-pill p4" />
-        <span className="lg-shape lg-ring r1" />
-        <span className="lg-shape lg-ring r2" />
-        <span className="lg-shape lg-ring r3" />
-        <span className="lg-shape lg-circle" />
-        <span className="lg-shape lg-orb o1" />
-        <span className="lg-shape lg-orb o2" />
-        <span className="lg-shape lg-orb o3" />
-      </div>
+    <div className="lg-page ln-page">
+      <div className="ln-bg" aria-hidden="true" />
 
-      <main className="lg-center">
-               <form className="lg-card" onSubmit={handleSubmit} noValidate aria-busy={loading}>
-          <fieldset className="lg-fieldset" disabled={loading}>
-            <div className="lg-brand">
-              <span className="lg-logo"><FiCalendar /></span>
-              <span>Staff Leave Management System</span>
-            </div>
+      <main className="ln-main">
+        {/* LEFT: logo + tagline */}
+        <section className="ln-brand">
+          <img className="ln-logo" src="/logo-full.png" alt="Leave Nest" />
+          <p className="ln-tags">
+            <span>Manage</span><i aria-hidden="true" />
+            <span>Request</span><i aria-hidden="true" />
+            <span>Stay Organized</span>
+          </p>
+          <p className="ln-motto">
+            <span aria-hidden="true" /> Your Leave, Our Priority <span aria-hidden="true" />
+          </p>
+        </section>
 
-            <span className="lg-eyebrow">Login</span>
-            <h1>Welcome Back</h1>
-            <p className="lg-hint">Sign in to your account to continue.</p>
+        {/* RIGHT: login card */}
+        <section className="ln-wrap">
+          <form className="ln-card" onSubmit={handleSubmit} noValidate aria-busy={loading}>
+            <span className="ln-badge" aria-hidden="true"><FiUsers /></span>
 
-            {error && (
-              <div className="lg-error" role="alert">
-                <FiAlertCircle /> {error}
-              </div>
-            )}
+            <fieldset className="lg-fieldset" disabled={loading}>
+              <h1>Welcome <em>Back</em></h1>
+              <p className="ln-sub">Sign in to your account to continue</p>
 
-            <div className="lg-field">
-              <label htmlFor="lg-email">Email</label>
-              <div className="lg-pass">
-                <FiMail className="lg-ico" />
-                <input
-                  id="lg-email"
-                  type="email"
-                  className={flash ? "lg-flash" : ""}
-                  placeholder="name@company.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  autoComplete="email"
-                />
-              </div>
-            </div>
-
-            <div className="lg-field">
-              <label htmlFor="lg-password">Password</label>
-              <div className="lg-pass">
-                <FiLock className="lg-ico" />
-                <input
-                  id="lg-password"
-                  type={showPassword ? "text" : "password"}
-                  className={flash ? "lg-flash" : ""}
-                  placeholder="Enter your password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  autoComplete="current-password"
-                />
-                <button
-                  type="button"
-                  className="lg-eye"
-                  onClick={() => setShowPassword(!showPassword)}
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                >
-                  {showPassword ? <FiEyeOff /> : <FiEye />}
-                </button>
-              </div>
-            </div>
-
-            <div className="lg-row">
-              <label className="lg-check">
-                <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
-                <span>Remember me</span>
-              </label>
-              <button type="button" className="lg-link" onClick={() => setShowForgot(!showForgot)}>
-                Forgot password?
-              </button>
-            </div>
-
-            {showForgot && (
-              <p className="lg-info">
-                Please contact your administrator or HR to reset your password.
-              </p>
-            )}
-
-            <button type="submit" className="lg-submit" disabled={loading} ref={submitRef}>
-              {loading ? (
-                <>
-                  <span className="lg-spinner" /> Signing in...
-                </>
-              ) : (
-                <>
-                  Sign in <FiArrowRight className="lg-arrow" />
-                </>
+              {error && (
+                <div className="ln-error" role="alert">
+                  <FiAlertCircle /> {error}
+                </div>
               )}
-            </button>
-          </fieldset>
 
-          {/* ring loader overlay */}
-          {loading && (
-            <div className="lg-loading" role="status" aria-live="polite">
-              <div className="lg-ring-loader">
-                {Array.from({ length: TICKS }).map((_, i) => (
-                  <span key={i} className="lg-tick" style={{ "--i": i }} />
-                ))}
-                <div className="lg-loading-text">
-                  <b>Signing in...</b>
-                  <small>Please wait</small>
+              <div className="ln-field">
+                <label htmlFor="ln-email" className="ln-sr">Email</label>
+                <div className="ln-input">
+                  <FiMail aria-hidden="true" />
+                  <input
+                    id="ln-email"
+                    type="email"
+                    className={flash ? "ln-flash" : ""}
+                    placeholder="Enter your email address"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    autoComplete="email"
+                  />
                 </div>
               </div>
-            </div>
-          )}
-        </form>
+
+              <div className="ln-field">
+                <label htmlFor="ln-password" className="ln-sr">Password</label>
+                <div className="ln-input">
+                  <FiLock aria-hidden="true" />
+                  <input
+                    id="ln-password"
+                    type={showPassword ? "text" : "password"}
+                    className={flash ? "ln-flash" : ""}
+                    placeholder="Enter your password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    autoComplete="current-password"
+                  />
+                  <button
+                    type="button"
+                    className="ln-eye"
+                    onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? <FiEye /> : <FiEyeOff />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="ln-row">
+                <label className="ln-check">
+                  <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
+                  <span>Remember me</span>
+                </label>
+                <button type="button" className="ln-link" onClick={() => setShowForgot(!showForgot)}>
+                  Forgot password?
+                </button>
+              </div>
+
+              {showForgot && (
+                <p className="ln-info">Please contact your administrator or HR to reset your password.</p>
+              )}
+
+              <button type="submit" className="ln-submit" disabled={loading} ref={submitRef}>
+                {loading ? (
+                  <>
+                    <span className="lg-spinner" /> Signing in...
+                  </>
+                ) : (
+                  <>
+                    <FiLogIn /> Sign In
+                  </>
+                )}
+              </button>
+
+              <div className="ln-or"><span>or</span></div>
+
+              <Link to="/register-company" className="ln-company">
+                <FiUserPlus className="ln-company-ico" aria-hidden="true" />
+                <span className="ln-company-text">
+                  <b>Add your company here</b>
+                  <small>Have 10 or more staff? Register in 2 minutes</small>
+                </span>
+                <FiChevronRight aria-hidden="true" />
+              </Link>
+            </fieldset>
+
+            {loading && (
+              <div className="lg-loading" role="status" aria-live="polite">
+                <div className="lg-ring-loader">
+                  {Array.from({ length: TICKS }).map((_, i) => (
+                    <span key={i} className="lg-tick" style={{ "--i": i }} />
+                  ))}
+                  <div className="lg-loading-text">
+                    <b>Signing in...</b>
+                    <small>Please wait</small>
+                  </div>
+                </div>
+              </div>
+            )}
+          </form>
+        </section>
       </main>
 
       {/* footer */}
-      <footer className="lg-footer">
-        <button type="button" className="lg-help-btn" onClick={() => setShowHelp(true)}>
-          <FiLifeBuoy /> Help &amp; Support
+      <footer className="ln-footer">
+        <button type="button" className="ln-foot" onClick={() => setShowAbout(true)}>
+          <FiShield /> Secure &amp; Reliable
         </button>
-        <span className="lg-dot" aria-hidden="true">•</span>
-        <span>Contact HR / IT Support</span>
-        <span className="lg-dot" aria-hidden="true">•</span>
-        <span className="lg-version">System version v{APP_VERSION}</span>
+        <span className="ln-sep" aria-hidden="true" />
+        <button type="button" className="ln-foot" onClick={() => setShowHelp(true)}>
+          <FiHeadphones /> Help &amp; Support
+        </button>
+        <span className="ln-sep" aria-hidden="true" />
+        <span className="ln-foot ln-static"><FiLayers /> System v{APP_VERSION}</span>
       </footer>
 
       {/* demo accounts (bottom-right) */}
@@ -267,7 +296,7 @@ export default function Login() {
             <h3>Try a demo account</h3>
             <p>No sign-up needed. Pick a role and the login details are filled in for you.</p>
             {demoRoles.map((d) => {
-              const account = users.find((u) => u.role === d.role);
+              const account = DEMO_ACCOUNTS.find((u) => u.role === d.role);
               return (
                 <button
                   type="button"
@@ -299,33 +328,64 @@ export default function Login() {
         </button>
       </div>
 
+      {/* about popup */}
+      {showAbout && (
+        <div className="lg-modal-overlay" onClick={() => setShowAbout(false)}>
+          <div className="lg-modal" role="dialog" aria-modal="true" aria-labelledby="lg-about-title" onClick={(e) => e.stopPropagation()}>
+            <button className="lg-modal-close" onClick={() => setShowAbout(false)} aria-label="Close" autoFocus>
+              <FiX />
+            </button>
+            <div className="lg-about-head">
+              <span className="lg-hero-logo small"><Logo size={34} /></span>
+              <div>
+                <h2 id="lg-about-title">Leave Nest</h2>
+                <p className="lg-modal-sub">Staff Leave Management System</p>
+              </div>
+            </div>
+            <p className="lg-about-text">
+              Leave Nest replaces paper forms and spreadsheets with one secure web application for applying for,
+              approving and tracking staff leave.
+            </p>
+            {points.map((p) => (
+              <div className="lg-contact lg-about-point" key={p.title}>
+                <span className="lg-point-icon">{p.icon}</span>
+                <div>
+                  <h3>{p.title}</h3>
+                  <p>{p.text}</p>
+                </div>
+              </div>
+            ))}
+            <div className="lg-roles"><span>Employee</span><span>Manager</span><span>Admin</span></div>
+            <p className="lg-modal-version">Leave Nest · v{APP_VERSION}</p>
+          </div>
+        </div>
+      )}
+
       {/* help popup */}
       {showHelp && (
         <div className="lg-modal-overlay" onClick={() => setShowHelp(false)}>
-          <div
-            className="lg-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="lg-help-title"
-            onClick={(e) => e.stopPropagation()}
-          >
+          <div className="lg-modal" role="dialog" aria-modal="true" aria-labelledby="lg-help-title" onClick={(e) => e.stopPropagation()}>
             <button className="lg-modal-close" onClick={() => setShowHelp(false)} aria-label="Close help" autoFocus>
               <FiX />
             </button>
             <h2 id="lg-help-title"><FiLifeBuoy /> Help &amp; Support</h2>
-            <p className="lg-modal-sub">Having trouble signing in? Reach out to the right team.</p>
+            <p className="lg-modal-sub">Need help with Leave Nest? We are happy to help.</p>
 
-            {supportContacts.map((c) => (
-              <div className="lg-contact" key={c.team}>
-                <h3>{c.team}</h3>
-                <p>{c.note}</p>
-                <a href={`mailto:${c.email}`}><FiMail /> {c.email}</a>
-                <a href={`tel:${c.phone.replace(/\s/g, "")}`}><FiPhone /> {c.phone}</a>
-              </div>
-            ))}
+            <div className="lg-contact">
+              <h3>Leave Nest Support</h3>
+              <p>Technical issues, login problems and general questions</p>
+              <a href={`mailto:${SUPPORT.email}`}><FiMail /> {SUPPORT.email}</a>
+              <a href={`tel:${SUPPORT.phone.replace(/\s/g, "")}`}><FiPhone /> {SUPPORT.phone}</a>
+              <a href={SUPPORT.website} target="_blank" rel="noreferrer"><FiGlobe /> {SUPPORT.websiteLabel}</a>
+            </div>
 
-            <p className="lg-hours"><FiClock /> Support hours: Mon - Fri, 8:30 AM - 5:00 PM</p>
-            <p className="lg-modal-version">Staff Leave Management System · v{APP_VERSION}</p>
+            <div className="lg-contact">
+              <h3>Forgot password or account locked?</h3>
+              <p>Please contact your company's HR or system administrator. They can reset your password or resend your invitation email.</p>
+            </div>
+
+            <p className="lg-hours"><FiClock /> Support hours: {SUPPORT.hours}</p>
+            <p className="lg-modal-version">Leave Nest · Staff Leave Management System · v{APP_VERSION}</p>
           </div>
         </div>
       )}

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
   FiGrid, FiPlusCircle, FiClock, FiCheckSquare, FiUsers, FiBriefcase, FiTag, FiBarChart2,
-  FiLogOut, FiMenu, FiCalendar, FiUser, FiMoon, FiSun,
+  FiLogOut, FiMenu, FiUser, FiMoon, FiSun, FiMail,
 } from "react-icons/fi";
 import { useAuth } from "../context/AuthContext";
 import Modal from "./Modal";
@@ -11,12 +11,14 @@ import { applyTheme, getTheme } from "../utils/theme";
 import { getAvatar } from "../utils/avatar";
 
 const profileLink = { to: "/profile", label: "My Profile", icon: <FiUser /> };
+const outboxLink = { to: "/outbox", label: "Email Outbox", icon: <FiMail /> };
 
 const menus = {
   employee: [
     { to: "/dashboard", label: "Dashboard", icon: <FiGrid /> },
     { to: "/apply", label: "Apply Leave", icon: <FiPlusCircle /> },
     { to: "/history", label: "My History", icon: <FiClock /> },
+    outboxLink,
     profileLink,
   ],
   manager: [
@@ -24,14 +26,16 @@ const menus = {
     { to: "/apply", label: "Apply Leave", icon: <FiPlusCircle /> },
     { to: "/history", label: "My History", icon: <FiClock /> },
     { to: "/approvals", label: "Team Requests", icon: <FiCheckSquare /> },
+    outboxLink,
     profileLink,
   ],
   admin: [
     { to: "/dashboard", label: "Dashboard", icon: <FiGrid /> },
-    { to: "/users", label: "Users", icon: <FiUsers /> },
+    { to: "/users", label: "Employees", icon: <FiUsers /> },
     { to: "/departments", label: "Departments", icon: <FiBriefcase /> },
     { to: "/leave-types", label: "Leave Types", icon: <FiTag /> },
     { to: "/reports", label: "Reports", icon: <FiBarChart2 /> },
+    outboxLink,
     profileLink,
   ],
 };
@@ -117,11 +121,7 @@ export default function Layout() {
       <div className={`overlay ${open ? "show" : ""}`} onClick={() => setOpen(false)} />
       <aside className={`sidebar ${open ? "open" : ""}`} aria-label="Sidebar">
         <div className="brand">
-          <span className="brand-logo"><FiCalendar /></span>
-          <div className="brand-text">
-            <strong>Staff Leave</strong>
-            <small>Management System</small>
-          </div>
+          <img className="brand-img" src="/logo-full.png" alt="Leave Nest" />
         </div>
         <nav aria-label="Main navigation">
           {menus[user.role].map((m) => (

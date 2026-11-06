@@ -1,7 +1,6 @@
 import { useRef, useState } from "react";
 import { FiEye, FiEyeOff, FiLock, FiCamera, FiTrash2 } from "react-icons/fi";
 import { useAuth } from "../context/AuthContext";
-import { users } from "../data/mockData";
 import { getAvatar, saveAvatar, removeAvatar } from "../utils/avatar";
 
 const emptyForm = { current: "", next: "", confirm: "" };
@@ -33,7 +32,7 @@ const shortcuts = [
 ];
 
 export default function Profile() {
-  const { user } = useAuth();
+  const { user, changePassword } = useAuth();
   const [form, setForm] = useState(emptyForm);
   const [errors, setErrors] = useState({});
   const [show, setShow] = useState({ current: false, next: false, confirm: false });
@@ -54,10 +53,8 @@ export default function Profile() {
 
   const validate = () => {
     const e = {};
-    const account = users.find((u) => u.email === user.email);
 
     if (!form.current) e.current = "Enter your current password.";
-    else if (!account || account.password !== form.current) e.current = "Current password is incorrect.";
 
     if (form.next.length < 8) e.next = "New password must be at least 8 characters.";
     else if (!/[A-Za-z]/.test(form.next) || !/\d/.test(form.next))
@@ -77,8 +74,11 @@ export default function Profile() {
       setErrors(e);
       return;
     }
-    const account = users.find((u) => u.email === user.email);
-    account.password = form.next;
+    const result = changePassword(form.current, form.next);
+    if (!result.ok) {
+      setErrors({ current: result.message });
+      return;
+    }
     setForm(emptyForm);
     setSuccess("Password changed successfully.");
   };
