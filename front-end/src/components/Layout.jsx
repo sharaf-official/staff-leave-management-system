@@ -5,7 +5,6 @@ import {
   FiLogOut, FiMenu, FiUser, FiMoon, FiSun, FiMail,
 } from "react-icons/fi";
 import { useAuth } from "../context/AuthContext";
-import Modal from "./Modal";
 import NotificationBell from "./NotificationBell";
 import { applyTheme, getTheme } from "../utils/theme";
 import { getAvatar } from "../utils/avatar";
@@ -130,6 +129,19 @@ export default function Layout() {
             </NavLink>
           ))}
         </nav>
+
+        <div className="side-foot">
+          <div className="side-user">
+            <span className="side-avatar">{photo ? <img src={photo} alt="" /> : user.name.charAt(0)}</span>
+            <span className="side-user-text">
+              <b>{user.name}</b>
+              <small>{user.role}</small>
+            </span>
+          </div>
+          <button type="button" className="side-logout" onClick={() => { setOpen(false); setShowLogout(true); }}>
+            <FiLogOut /> Log out
+          </button>
+        </div>
       </aside>
 
       <div className="main">
@@ -165,8 +177,8 @@ export default function Layout() {
             </div>
           </button>
 
-          <button className="btn btn-outline btn-sm" onClick={() => setShowLogout(true)}>
-            <FiLogOut /> Logout
+          <button className="lo-btn" onClick={() => setShowLogout(true)} aria-label="Log out">
+            <FiLogOut /> <span>Logout</span>
           </button>
         </header>
 
@@ -178,19 +190,21 @@ export default function Layout() {
       </div>
 
       {showLogout && (
-        <Modal title="Confirm logout" onClose={() => setShowLogout(false)}>
-          <p style={{ marginBottom: 18 }}>
-            Hi {user.name.split(" ")[0]}, are you sure you want to log out of your account?
-          </p>
-          <div className="modal-actions">
-            <button className="btn btn-danger" onClick={confirmLogout}>
-              <FiLogOut /> Yes, log out
-            </button>
-            <button className="btn btn-outline" onClick={() => setShowLogout(false)}>
-              Stay signed in
-            </button>
+        <div className="lo-overlay" onMouseDown={(e) => e.target === e.currentTarget && setShowLogout(false)}>
+          <div className="lo-dialog" role="alertdialog" aria-modal="true" aria-labelledby="lo-title" aria-describedby="lo-desc">
+            <span className="lo-icon"><FiLogOut /></span>
+            <h2 id="lo-title">Log out of Leave Nest?</h2>
+            <p id="lo-desc">Hi {user.name.split(" ")[0]}, you will need to sign in again to continue.</p>
+            <div className="lo-actions">
+              <button type="button" className="lo-cancel" autoFocus onClick={() => setShowLogout(false)}>
+                Stay signed in
+              </button>
+              <button type="button" className="lo-confirm" onClick={confirmLogout}>
+                Log out
+              </button>
+            </div>
           </div>
-        </Modal>
+        </div>
       )}
     </div>
   );
