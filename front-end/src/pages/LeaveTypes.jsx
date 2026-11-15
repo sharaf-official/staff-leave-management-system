@@ -1,17 +1,29 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { FiPlus, FiEdit2, FiTrash2 } from "react-icons/fi";
-import { leaveTypeList } from "../data/mockData";
+import { api } from "../api";
 
 const emptyForm = { name: "", days: "" };
 
 export default function LeaveTypes() {
-  const [types, setTypes] = useState(leaveTypeList);
+  const [types, setTypes] = useState([]);
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [errors, setErrors] = useState({});
   const [toDelete, setToDelete] = useState(null);
   const [message, setMessage] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const load = useCallback(async () => {
+    try {
+      const { leaveTypes } = await api("/leave-types");
+      setTypes(leaveTypes);
+    } catch (err) {
+      setMessage(err.message);
+    }
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
 
   const flash = (text) => {
     setMessage(text);
@@ -26,8 +38,9 @@ export default function LeaveTypes() {
     setErrors({ ...errors, [e.target.name]: "" });
   };
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
+    if (busy) return;
     const err = {};
     const name = form.name.trim();
     const days = Number(form.days);
@@ -38,19 +51,32 @@ export default function LeaveTypes() {
       err.days = "Enter whole days between 1 and 365.";
     if (Object.keys(err).length > 0) return setErrors(err);
 
-    if (editingId === null) {
-      setTypes([...types, { id: Date.now(), name, days }]);
-      flash("Leave type added.");
-    } else {
-      setTypes(types.map((t) => (t.id === editingId ? { ...t, name, days } : t)));
-      flash("Leave type updated.");
+    setBusy(true);
+    try {
+      if (editingId === null) {
+        await api("/leave-types", { method: "POST", body: { name, days } });
+        flash("Leave type added.");
+      } else {
+        await api(`/leave-types/${editingId}`, { method: "PUT", body: { name, days } });
+        flash("Leave type updated.");
+      }
+      setShowForm(false);
+      await load();
+    } catch (er) {
+      setErrors({ name: er.message });
+    } finally {
+      setBusy(false);
     }
-    setShowForm(false);
   };
 
-  const confirmDelete = () => {
-    setTypes(types.filter((t) => t.id !== toDelete.id));
-    flash(`${toDelete.name} leave type deleted.`);
+  const confirmDelete = async () => {
+    try {
+      await api(`/leave-types/${toDelete.id}`, { method: "DELETE" });
+      flash(`${toDelete.name} leave type deleted.`);
+      await load();
+    } catch (er) {
+      flash(er.message);
+    }
     setToDelete(null);
   };
 
@@ -105,7 +131,7 @@ export default function LeaveTypes() {
             </div>
             <div className="rv-actions">
               <button type="button" className="btn rv-cancel" onClick={() => setShowForm(false)}>Cancel</button>
-              <button type="submit" className="btn">{editingId === null ? "Add" : "Save changes"}</button>
+              <button type="submit" className="btn" disabled={busy}>{editingId === null ? "Add" : "Save changes"}</button>
             </div>
           </form>
         </div>

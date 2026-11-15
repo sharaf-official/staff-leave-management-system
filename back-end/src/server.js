@@ -6,6 +6,7 @@ import authRoutes from "./routes/auth.js";
 import usersRoutes, { outboxRouter } from "./routes/users.js";
 import leavesRoutes from "./routes/leaves.js";
 import departmentsRoutes from "./routes/departments.js";
+import leaveTypesRoutes from "./routes/leaveTypes.js";
 
 const app = express();
 app.use(cors({ origin: ["http://localhost:5173"] }));
@@ -21,6 +22,7 @@ app.use("/api/users", usersRoutes);
 app.use("/api/outbox", outboxRouter);
 app.use("/api/leaves", leavesRoutes);
 app.use("/api/departments", departmentsRoutes);
+app.use("/api/leave-types", leaveTypesRoutes);
 
 app.use((err, _req, res, _next) => {
   console.error(err);
