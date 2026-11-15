@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { FiCheck, FiX } from "react-icons/fi";
 import { api } from "../api";
 import StatusBadge from "../components/StatusBadge";
@@ -115,7 +116,7 @@ export default function Approvals() {
         </div>
       </div>
 
-      {selected && (
+      {selected && createPortal(
         <div className="rv-overlay" onClick={closeReview}>
           <div className="rv-modal" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
             <h3>Review leave request</h3>
@@ -142,7 +143,8 @@ export default function Approvals() {
               <button className="btn rv-approve" onClick={() => decide("Approved")} disabled={busy}><FiCheck /> Approve</button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
