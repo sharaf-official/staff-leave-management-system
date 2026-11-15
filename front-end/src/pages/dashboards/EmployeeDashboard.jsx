@@ -11,12 +11,14 @@ export default function EmployeeDashboard() {
   const { user } = useAuth();
   const today = localToday();
   const [leaveRequests, setLeaveRequests] = useState([]);
+  const [typeList, setTypeList] = useState([]);
 
   useEffect(() => {
     api("/leaves/mine").then(({ leaves }) => setLeaveRequests(leaves)).catch(() => {});
+    api("/leave-types").then(({ leaveTypes }) => setTypeList(leaveTypes)).catch(() => {});
   }, []);
 
-  const balances = buildBalances(leaveRequests);
+  const balances = buildBalances(leaveRequests, typeList);
 
   const pendingCount = leaveRequests.filter((r) => r.status === "Pending").length;
   const next = leaveRequests

@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { FiSend, FiCheckCircle, FiMail, FiInfo } from "react-icons/fi";
 import { api } from "../api";
-import { leaveTypeList } from "../data/mockData";
 import { usedDays } from "../utils/leaves";
 import { DxHead, DxCard } from "../components/Dx";
 import { localToday, plural } from "../utils/format";
@@ -33,6 +32,7 @@ export default function ApplyLeave() {
   const [result, setResult] = useState(null);
   const [mine, setMine] = useState([]);
   const [approver, setApprover] = useState(null);
+  const [typeList, setTypeList] = useState([]);
 
   const loadMine = () =>
     api("/leaves/mine").then(({ leaves }) => setMine(leaves)).catch(() => {});
@@ -40,9 +40,10 @@ export default function ApplyLeave() {
   useEffect(() => {
     loadMine();
     api("/leaves/approver").then(({ approver: a }) => setApprover(a)).catch(() => {});
+    api("/leave-types").then(({ leaveTypes }) => setTypeList(leaveTypes)).catch(() => {});
   }, []);
 
-  const types = leaveTypeList.map((t) => ({
+  const types = typeList.map((t) => ({
     name: t.name,
     total: t.days,
     remaining: Math.max(t.days - usedDays(mine, t.name), 0),

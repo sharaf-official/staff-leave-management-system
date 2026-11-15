@@ -87,6 +87,28 @@ router.post("/", async (req, res) => {
   const approver = await findApprover(me);
   if (!approver) return res.status(400).json({ message: "No approver is assigned to you." });
 
+    const [[lt]] = await pool.query(
+    "SELECT days FROM leave_types WHERE company_id = ? AND name = ?",
+    [me.company_id, leaveType]
+  );
+  if (!lt) return res.status(400).json({ message: "Unknown leave type." });
+
+  const [[used]] = await pool.query(
+    `SELECT COALESCE(SUM(days), 0) AS n FROM leave_requests
+     WHERE user_id = ? AND leave_type = ? AND status IN ('pending','approved')`,
+    [me.id, leaveType]
+  );
+  const left = lt.days - Number(used.n);
+  if (days > left)
+    return res.status(400).json({ message: `Not enough ${leaveType} leave. You have ${left} day(s) left.` });
+
+  const [[clash]] = await pool.query(
+    `SELECT COUNT(*) AS n FROM leave_requests
+     WHERE user_id = ? AND status IN ('pending','approved') AND start_date <= ? AND end_date >= ?`,
+    [me.id, endDate, startDate]
+  );
+  if (clash.n > 0)
+    return res.status(400).json({ message: "You already have a request on these dates." });
   const [r] = await pool.query(
     `INSERT INTO leave_requests (company_id, user_id, manager_id, leave_type, start_date, end_date, days, reason)
      VALUES (?,?,?,?,?,?,?,?)`,
