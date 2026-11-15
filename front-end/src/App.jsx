@@ -18,7 +18,7 @@ import Outbox from "./pages/Outbox";
 import Profile from "./pages/Profile";
 
 const STAFF = ["employee", "manager"];
-const MANAGER = ["manager"];
+const MANAGER = ["manager", "admin"];
 const ADMIN = ["admin"];
 
 export default function App() {

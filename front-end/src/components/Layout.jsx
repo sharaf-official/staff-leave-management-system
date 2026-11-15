@@ -30,6 +30,7 @@ const menus = {
   ],
   admin: [
     { to: "/dashboard", label: "Dashboard", icon: <FiGrid /> },
+    { to: "/approvals", label: "Approvals", icon: <FiCheckSquare /> },
     { to: "/users", label: "Employees", icon: <FiUsers /> },
     { to: "/departments", label: "Departments", icon: <FiBriefcase /> },
     { to: "/leave-types", label: "Leave Types", icon: <FiTag /> },
