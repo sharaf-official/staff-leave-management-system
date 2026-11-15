@@ -1,22 +1,9 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, useContext, useState } from "react";
-import { findUserByEmail, getCompany, mockHash, updateUser, verifyPassword } from "../data/db";
+import { createContext, useContext, useEffect, useState } from "react";
+import { api, getToken, setToken } from "../api";
 
 const SESSION_KEY = "leavenest-session";
 const AuthContext = createContext(null);
-
-const toSession = (u) => ({
-  id: u.id,
-  companyId: u.companyId,
-  name: u.name,
-  email: u.email,
-  role: u.role,
-  department: u.department,
-  managerId: u.managerId,
-  jobTitle: u.jobTitle,
-  status: u.status,
-  mustChangePassword: u.mustChangePassword,
-});
 
 const writeSession = (session) => {
   try {
@@ -28,13 +15,10 @@ const writeSession = (session) => {
 };
 
 function readSession() {
+  if (!getToken()) return null;
   try {
     const raw = localStorage.getItem(SESSION_KEY);
-    if (!raw) return null;
-    const saved = JSON.parse(raw);
-    const fresh = findUserByEmail(saved.email); // always re-sync with the database
-    if (!fresh || fresh.status === "disabled") return null;
-    return toSession(fresh);
+    return raw ? JSON.parse(raw) : null;
   } catch {
     return null;
   }
@@ -43,61 +27,59 @@ function readSession() {
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(readSession);
 
-  const login = (email, password) => {
-    const found = findUserByEmail(email);
-    if (!found || !verifyPassword(found, password)) {
-      return { ok: false, message: "Invalid email or password." };
-    }
-    if (found.status === "disabled") {
-      return { ok: false, message: "This account has been disabled. Please contact your admin." };
-    }
-    if (found.mustChangePassword && found.tempExpiresAt && Date.now() > found.tempExpiresAt) {
-      return { ok: false, message: "Your temporary password has expired. Ask your admin to resend the invitation." };
-    }
-    const updated = updateUser(found.id, { lastLoginAt: new Date().toISOString() });
-    const session = toSession(updated);
-    writeSession(session);
-    setUser(session);
-    return { ok: true, user: session };
-  };
-
-  const logout = () => {
+  const clear = () => {
+    setToken(null);
     writeSession(null);
     setUser(null);
   };
 
-  const changePassword = (current, next) => {
-    if (!user) return { ok: false, message: "You are not signed in." };
-    const found = findUserByEmail(user.email);
-    if (!found || !verifyPassword(found, current)) {
-      return { ok: false, message: "Current password is incorrect." };
+  // re-sync with the server on load (token expired / account disabled -> sign out)
+  useEffect(() => {
+    if (!getToken()) return;
+    api("/auth/me")
+      .then(({ user: u }) => {
+        writeSession(u);
+        setUser(u);
+      })
+      .catch((err) => {
+        if (err.status === 401 || err.status === 403 || err.status === 404) clear();
+      });
+  }, []);
+
+  const login = async (email, password) => {
+    try {
+      const { token, user: u } = await api("/auth/login", { method: "POST", body: { email, password } });
+      setToken(token);
+      writeSession(u);
+      setUser(u);
+      return { ok: true, user: u };
+    } catch (err) {
+      return { ok: false, message: err.message };
     }
-    if (getCompany(found.companyId)?.isDemo) {
-      return { ok: false, message: "Demo accounts cannot change their password." };
-    }
-    if (verifyPassword(found, next)) {
-      return { ok: false, message: "New password must be different from the current one." };
-    }
-    const updated = updateUser(found.id, {
-      passwordHash: mockHash(next, found.email),
-      mustChangePassword: false,
-      status: "active",
-      tempExpiresAt: null,
-    });
-    const session = toSession(updated);
-    writeSession(session);
-    setUser(session);
-    return { ok: true };
   };
 
-  // re-read the logged-in user from the database (after profile edits)
-  const refreshUser = () => {
-    if (!user) return;
-    const fresh = findUserByEmail(user.email);
-    if (fresh) {
-      const session = toSession(fresh);
-      writeSession(session);
-      setUser(session);
+  const logout = () => clear();
+
+  const changePassword = async (current, next) => {
+    if (!user) return { ok: false, message: "You are not signed in." };
+    try {
+      await api("/auth/change-password", { method: "POST", body: { current, next } });
+      const { user: u } = await api("/auth/me");
+      writeSession(u);
+      setUser(u);
+      return { ok: true };
+    } catch (err) {
+      return { ok: false, message: err.message };
+    }
+  };
+
+  const refreshUser = async () => {
+    try {
+      const { user: u } = await api("/auth/me");
+      writeSession(u);
+      setUser(u);
+    } catch {
+      /* ignore */
     }
   };
 

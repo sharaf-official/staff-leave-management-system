@@ -55,7 +55,8 @@ router.post("/change-password", requireAuth, async (req, res) => {
   );
   const u = rows[0];
   if (!u) return res.status(404).json({ message: "User not found." });
-  if (u.is_demo) return res.status(403).json({ message: "Demo accounts cannot change their password." });
+  const DEMO_EMAILS = ["admin@company.com", "manager@company.com", "employee@company.com"];
+  if (DEMO_EMAILS.includes(u.email)) return res.status(403).json({ message: "Demo accounts cannot change their password." });
   if (!(await bcrypt.compare(current || "", u.password_hash)))
     return res.status(400).json({ message: "Current password is incorrect." });
   if (!next || next.length < 8 || !/[A-Za-z]/.test(next) || !/\d/.test(next))

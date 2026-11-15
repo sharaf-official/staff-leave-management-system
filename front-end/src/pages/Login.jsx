@@ -123,9 +123,8 @@ export default function Login() {
 
     setLoading(true);
     try {
-      // Demo delay so the loading animation is visible. Remove when the real API is connected (E3).
-      await new Promise((resolve) => setTimeout(resolve, 1800));
-
+  
+      
       const result = await login(email.trim(), password);
       const ok = result === true || Boolean(result && (result.ok || result.success || result.email));
       if (!ok) {

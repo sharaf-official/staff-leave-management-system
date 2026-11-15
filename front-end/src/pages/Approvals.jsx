@@ -1,15 +1,31 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { FiCheck, FiX } from "react-icons/fi";
-import { teamRequests } from "../data/mockData";
+import { api } from "../api";
 import StatusBadge from "../components/StatusBadge";
 
 export default function Approvals() {
-  const [requests, setRequests] = useState(teamRequests);
+  const [requests, setRequests] = useState([]);
   const [filter, setFilter] = useState("Pending");
   const [selected, setSelected] = useState(null);
   const [comment, setComment] = useState("");
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [loadError, setLoadError] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const load = useCallback(async () => {
+    try {
+      const { leaves } = await api("/leaves");
+      setRequests(leaves);
+      setLoadError("");
+    } catch (err) {
+      setLoadError(err.message);
+    }
+  }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
 
   const shown = requests.filter((r) => filter === "All" || r.status === filter);
   const pendingCount = requests.filter((r) => r.status === "Pending").length;
@@ -22,17 +38,27 @@ export default function Approvals() {
 
   const closeReview = () => setSelected(null);
 
-  const decide = (status) => {
+  const decide = async (status) => {
+    if (busy) return;
     if (status === "Rejected" && comment.trim() === "") {
       setError("Please enter a comment when rejecting a request.");
       return;
     }
-    setRequests((prev) =>
-      prev.map((r) => (r.id === selected.id ? { ...r, status, comment: comment.trim() } : r))
-    );
-    setMessage(`${selected.employee}'s request was ${status.toLowerCase()}.`);
-    setSelected(null);
-    setTimeout(() => setMessage(""), 3500);
+    setBusy(true);
+    try {
+      await api(`/leaves/${selected.id}/decision`, {
+        method: "PATCH",
+        body: { status: status.toLowerCase(), note: comment.trim() },
+      });
+      setMessage(`${selected.employee}'s request was ${status.toLowerCase()}. They were notified by email.`);
+      setSelected(null);
+      setTimeout(() => setMessage(""), 4000);
+      await load();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
@@ -54,6 +80,7 @@ export default function Approvals() {
         </div>
 
         {message && <div className="rv-toast">{message}</div>}
+        {loadError && <div className="rv-toast" role="alert">{loadError}</div>}
 
         <div className="table-wrap">
           <table>
@@ -111,8 +138,8 @@ export default function Approvals() {
 
             <div className="rv-actions">
               <button className="btn rv-cancel" onClick={closeReview}>Cancel</button>
-              <button className="btn rv-reject" onClick={() => decide("Rejected")}><FiX /> Reject</button>
-              <button className="btn rv-approve" onClick={() => decide("Approved")}><FiCheck /> Approve</button>
+              <button className="btn rv-reject" onClick={() => decide("Rejected")} disabled={busy}><FiX /> Reject</button>
+              <button className="btn rv-approve" onClick={() => decide("Approved")} disabled={busy}><FiCheck /> Approve</button>
             </div>
           </div>
         </div>

@@ -1,21 +1,40 @@
-import { useState } from "react";
-import { leaveRequests } from "../data/mockData";
+import { useCallback, useEffect, useState } from "react";
+import { api } from "../api";
 import StatusBadge from "../components/StatusBadge";
 
 export default function History() {
-  const [requests, setRequests] = useState(leaveRequests);
+  const [requests, setRequests] = useState([]);
   const [status, setStatus] = useState("");
   const [type, setType] = useState("");
   const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+
+  const load = useCallback(async () => {
+    try {
+      const { leaves } = await api("/leaves/mine");
+      setRequests(leaves);
+    } catch (err) {
+      setError(err.message);
+    }
+  }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
 
   const filtered = requests.filter(
     (r) => (!status || r.status === status) && (!type || r.type === type)
   );
 
-  const handleCancel = (id) => {
+  const handleCancel = async (id) => {
     if (!window.confirm("Cancel this leave request?")) return;
-    setRequests(requests.map((r) => (r.id === id ? { ...r, status: "Cancelled" } : r)));
-    setMessage("Leave request cancelled");
+    try {
+      await api(`/leaves/${id}/cancel`, { method: "PATCH" });
+      setMessage("Leave request cancelled");
+      await load();
+    } catch (err) {
+      setError(err.message);
+    }
   };
 
   return (
@@ -23,6 +42,7 @@ export default function History() {
       <h1 className="page-title">My Leave History</h1>
       <div className="card">
         {message && <div className="alert alert-success">{message}</div>}
+        {error && <div className="rv-toast" role="alert">{error}</div>}
 
         <div className="filters">
           <select value={status} onChange={(e) => setStatus(e.target.value)}>
@@ -60,7 +80,7 @@ export default function History() {
                     <td>
                       {r.status === "Pending" ? (
                         <button className="btn btn-sm btn-danger" onClick={() => handleCancel(r.id)}>Cancel</button>
-                      ) : "-"}
+                      ) : r.comment ? r.comment : "-"}
                     </td>
                   </tr>
                 ))

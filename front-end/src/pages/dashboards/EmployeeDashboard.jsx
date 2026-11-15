@@ -1,20 +1,22 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { FiPlusCircle, FiList } from "react-icons/fi";
 import { useAuth } from "../../context/AuthContext";
-import { getDb } from "../../data/db";
-import { leaveBalances, leaveRequests, leaveTypeList } from "../../data/mockData";
+import { api } from "../../api";
+import { buildBalances } from "../../utils/leaves";
 import { DxHead, DxCard, DxStatus, DxBalances, DxCalendar } from "../../components/Dx";
 import { greeting, longDate, localToday, rangeText, plural, toISO } from "../../utils/format";
 
 export default function EmployeeDashboard() {
   const { user } = useAuth();
   const today = localToday();
-  const manager = getDb().users.find((u) => u.id === user.managerId);
+  const [leaveRequests, setLeaveRequests] = useState([]);
 
-  const balances = leaveBalances.map((b) => {
-    const total = leaveTypeList.find((t) => t.name === b.type)?.days ?? b.remaining;
-    return { ...b, total, used: Math.max(total - b.remaining, 0) };
-  });
+  useEffect(() => {
+    api("/leaves/mine").then(({ leaves }) => setLeaveRequests(leaves)).catch(() => {});
+  }, []);
+
+  const balances = buildBalances(leaveRequests);
 
   const pendingCount = leaveRequests.filter((r) => r.status === "Pending").length;
   const next = leaveRequests
@@ -94,9 +96,9 @@ export default function EmployeeDashboard() {
                     <DxStatus status={next.status} />
                   </div>
                 </div>
-                {manager && (
+                {next.approverName && (
                   <p className="dx-note">
-                    Approver: <b>{manager.name}</b>
+                    Approver: <b>{next.approverName}</b>
                   </p>
                 )}
               </>

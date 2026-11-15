@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FiFileText, FiCheckCircle, FiClock, FiXCircle, FiDownload } from "react-icons/fi";
 import { jsPDF } from "jspdf";
-import autoTable from "jspdf-autotable";import { reportData, departments, leaveTypeList } from "../data/mockData";
+import autoTable from "jspdf-autotable";
+import { api } from "../api";
+import { leaveTypeList } from "../data/mockData";
 import StatCard from "../components/StatCard";
 import StatusBadge from "../components/StatusBadge";
 
@@ -9,6 +11,14 @@ const initialFilters = { from: "", to: "", department: "All", type: "All", statu
 
 export default function Reports() {
   const [filters, setFilters] = useState(initialFilters);
+  const [reportData, setReportData] = useState([]);
+  const [departments, setDepartments] = useState([]);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    api("/leaves").then(({ leaves }) => setReportData(leaves)).catch((err) => setError(err.message));
+    api("/departments").then(({ departments: d }) => setDepartments(d.map((x) => x.name))).catch(() => {});
+  }, []);
 
   const handleChange = (e) => setFilters({ ...filters, [e.target.name]: e.target.value });
 
@@ -29,12 +39,12 @@ export default function Reports() {
 
   const count = (s) => rows.filter((r) => r.status === s).length;
   const totalDays = rows.reduce((sum, r) => sum + r.days, 0);
+
   const downloadPDF = () => {
     const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
     const pageW = doc.internal.pageSize.getWidth();
     const pageH = doc.internal.pageSize.getHeight();
 
-    // Header band
     doc.setFillColor(79, 70, 229);
     doc.rect(0, 0, pageW, 80, "F");
     doc.setTextColor(255, 255, 255);
@@ -47,7 +57,6 @@ export default function Reports() {
     doc.setFontSize(10);
     doc.text(`Generated: ${new Date().toLocaleString()}`, pageW - 40, 38, { align: "right" });
 
-    // Applied filters
     const filterText = [
       `From: ${filters.from || "Any"}`,
       `To: ${filters.to || "Any"}`,
@@ -59,7 +68,6 @@ export default function Reports() {
     doc.setFontSize(10);
     doc.text(`Filters:  ${filterText}`, 40, 105);
 
-    // Summary boxes
     const boxes = [
       { label: "Total requests", value: rows.length, color: [79, 70, 229] },
       { label: "Approved", value: count("Approved"), color: [22, 163, 74] },
@@ -86,7 +94,6 @@ export default function Reports() {
       doc.text(b.label, x + 16, 163);
     });
 
-    // Table
     const statusColors = {
       Approved: [22, 163, 74],
       Pending: [217, 119, 6],
@@ -96,7 +103,7 @@ export default function Reports() {
     autoTable(doc, {
       startY: 190,
       head: [["#", "Employee", "Department", "Type", "From", "To", "Days", "Status"]],
-      body: rows.map((r, i) => [i + 1, r.employee, r.department, r.type, r.from, r.to, r.days, r.status]),
+      body: rows.map((r, i) => [i + 1, r.employee, r.department || "-", r.type, r.from, r.to, r.days, r.status]),
       theme: "striped",
       styles: { font: "helvetica", fontSize: 10, cellPadding: 7, textColor: [30, 41, 59] },
       headStyles: { fillColor: [30, 27, 75], textColor: 255, fontStyle: "bold" },
@@ -110,7 +117,6 @@ export default function Reports() {
       },
     });
 
-    // Footer on every page
     const pages = doc.internal.getNumberOfPages();
     for (let i = 1; i <= pages; i++) {
       doc.setPage(i);
@@ -124,6 +130,7 @@ export default function Reports() {
 
     doc.save("leave-report.pdf");
   };
+
   return (
     <div>
       <div className="cards cards-4">
@@ -170,11 +177,12 @@ export default function Reports() {
           </div>
         </div>
         {dateError && <p className="rv-error">{dateError}</p>}
+        {error && <p className="rv-error">{error}</p>}
         <div className="rp-bar">
           <button className="btn rv-cancel" onClick={() => setFilters(initialFilters)}>Reset filters</button>
-         <button className="btn us-add" onClick={downloadPDF} disabled={rows.length === 0 || !!dateError}>
-  <FiDownload /> Download PDF
-</button>
+          <button className="btn us-add" onClick={downloadPDF} disabled={rows.length === 0 || !!dateError}>
+            <FiDownload /> Download PDF
+          </button>
         </div>
       </div>
 
@@ -192,7 +200,7 @@ export default function Reports() {
               {rows.map((r) => (
                 <tr key={r.id}>
                   <td>{r.employee}</td>
-                  <td>{r.department}</td>
+                  <td>{r.department || "-"}</td>
                   <td>{r.type}</td>
                   <td>{r.from}</td>
                   <td>{r.to}</td>

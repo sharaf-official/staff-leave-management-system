@@ -1,14 +1,19 @@
+import { useEffect, useState } from "react";
 import { FiUserPlus, FiBarChart2 } from "react-icons/fi";
 import { useAuth } from "../../context/AuthContext";
-import { getCompany, getDb } from "../../data/db";
-import { reportData } from "../../data/mockData";
+import { api } from "../../api";
 import { DxHead, DxCard, DxMetrics, DxStatus, DxBars } from "../../components/Dx";
 import { greeting, initials, rangeText } from "../../utils/format";
 
 export default function AdminDashboard() {
   const { user } = useAuth();
-  const company = getCompany(user.companyId);
-  const people = getDb().users.filter((u) => u.companyId === user.companyId);
+  const [people, setPeople] = useState([]);
+  const [reportData, setReportData] = useState([]);
+
+  useEffect(() => {
+    api("/users").then(({ users }) => setPeople(users)).catch(() => {});
+    api("/leaves").then(({ leaves }) => setReportData(leaves)).catch(() => {});
+  }, []);
 
   const invited = people.filter((p) => p.status === "invited").length;
   const pending = reportData.filter((r) => r.status === "Pending").length;
@@ -27,7 +32,7 @@ export default function AdminDashboard() {
   return (
     <div className="dx">
       <DxHead
-        eyebrow={company ? company.name : "Company overview"}
+        eyebrow="Company overview"
         title={`${greeting()}, ${user.name.split(" ")[0]}`}
         subtitle="Staff, departments and leave activity at a glance."
         actions={[

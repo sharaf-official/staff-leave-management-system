@@ -1,21 +1,27 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { FiCheckSquare, FiPlusCircle } from "react-icons/fi";
 import { useAuth } from "../../context/AuthContext";
-import { leaveBalances, leaveTypeList, teamRequests } from "../../data/mockData";
+import { api } from "../../api";
+import { buildBalances } from "../../utils/leaves";
 import { DxHead, DxCard, DxMetrics, DxBalances, DxBars } from "../../components/Dx";
 import { greeting, longDate, initials, plural, rangeText } from "../../utils/format";
 
 export default function ManagerDashboard() {
   const { user } = useAuth();
+  const [teamRequests, setTeamRequests] = useState([]);
+  const [mine, setMine] = useState([]);
+
+  useEffect(() => {
+    api("/leaves").then(({ leaves }) => setTeamRequests(leaves)).catch(() => {});
+    api("/leaves/mine").then(({ leaves }) => setMine(leaves)).catch(() => {});
+  }, []);
 
   const pending = teamRequests.filter((r) => r.status === "Pending");
   const approved = teamRequests.filter((r) => r.status === "Approved").length;
   const rejected = teamRequests.filter((r) => r.status === "Rejected").length;
 
-  const balances = leaveBalances.map((b) => {
-    const total = leaveTypeList.find((t) => t.name === b.type)?.days ?? b.remaining;
-    return { ...b, total, used: Math.max(total - b.remaining, 0) };
-  });
+  const balances = buildBalances(mine);
 
   return (
     <div className="dx">

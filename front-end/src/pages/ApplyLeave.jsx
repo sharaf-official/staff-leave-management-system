@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { FiSend, FiCheckCircle, FiMail, FiInfo } from "react-icons/fi";
-import { useAuth } from "../context/AuthContext";
-import { getDb, sendMail } from "../data/db";
-import { leaveBalances, leaveRequests, leaveTypeList, teamRequests } from "../data/mockData";
+import { api } from "../api";
+import { leaveTypeList } from "../data/mockData";
+import { usedDays } from "../utils/leaves";
 import { DxHead, DxCard } from "../components/Dx";
 import { localToday, plural } from "../utils/format";
 
@@ -26,28 +26,30 @@ const workingDays = (from, to) => {
 const blank = { type: "", from: "", to: "", reason: "" };
 
 export default function ApplyLeave() {
-  const { user } = useAuth();
   const today = localToday();
   const [form, setForm] = useState(blank);
   const [errors, setErrors] = useState({});
   const [sending, setSending] = useState(false);
   const [result, setResult] = useState(null);
+  const [mine, setMine] = useState([]);
+  const [approver, setApprover] = useState(null);
+
+  const loadMine = () =>
+    api("/leaves/mine").then(({ leaves }) => setMine(leaves)).catch(() => {});
+
+  useEffect(() => {
+    loadMine();
+    api("/leaves/approver").then(({ approver: a }) => setApprover(a)).catch(() => {});
+  }, []);
 
   const types = leaveTypeList.map((t) => ({
     name: t.name,
     total: t.days,
-    remaining: leaveBalances.find((b) => b.type === t.name)?.remaining ?? t.days,
+    remaining: Math.max(t.days - usedDays(mine, t.name), 0),
   }));
   const selected = types.find((t) => t.name === form.type);
 
   const days = form.from && form.to && form.to >= form.from ? workingDays(form.from, form.to) : 0;
-
-  // who gets the email: the assigned manager, otherwise a company admin
-  const users = getDb().users;
-  const approver =
-    users.find((u) => u.id === user.managerId) ||
-    users.find((u) => u.companyId === user.companyId && u.role === "admin" && u.id !== user.id) ||
-    null;
 
   const set = (name, value) => {
     setForm((f) => ({ ...f, [name]: value }));
@@ -66,7 +68,7 @@ export default function ApplyLeave() {
       if (days === 0) e.to = "These dates are weekends only. Choose working days.";
       else if (selected && days > selected.remaining)
         e.type = `You only have ${plural(selected.remaining, "day")} of ${selected.name.toLowerCase()} leave left.`;
-      const clash = leaveRequests.find(
+      const clash = mine.find(
         (r) => (r.status === "Pending" || r.status === "Approved") && form.from <= r.to && form.to >= r.from
       );
       if (clash) e.from = `You already have a ${clash.status.toLowerCase()} request on these dates.`;
@@ -75,47 +77,26 @@ export default function ApplyLeave() {
     return e;
   };
 
-  const submit = (ev) => {
+  const submit = async (ev) => {
     ev.preventDefault();
     if (sending) return;
     const e = validate();
     if (Object.keys(e).length) return setErrors(e);
 
     setSending(true);
-    setTimeout(() => {
-      const id = Date.now();
-      leaveRequests.unshift({ id, type: form.type, from: form.from, to: form.to, days, status: "Pending", reason: form.reason.trim() });
-      if (approver && approver.role === "manager") {
-        teamRequests.unshift({
-          id: id + 1, employee: user.name, type: form.type, from: form.from, to: form.to, days,
-          reason: form.reason.trim(), status: "Pending", comment: "",
-        });
-      }
-      if (approver) {
-        sendMail({
-          type: "leave_request",
-          companyId: user.companyId,
-          to: approver.email,
-          subject: `Leave request: ${user.name} - ${form.type} leave`,
-          body:
-`Hi ${approver.name.split(" ")[0]},
-
-${user.name}${user.department ? ` (${user.department})` : ""} has requested leave and is waiting for your decision.
-
-Leave type: ${form.type}
-Dates: ${longDate(form.from)}${form.from !== form.to ? ` to ${longDate(form.to)}` : ""}
-Working days: ${days}
-Reason: ${form.reason.trim()}
-
-Review and decide: ${window.location.origin}/approvals
-
-- Leave Nest`,
-        });
-      }
+    try {
+      await api("/leaves", {
+        method: "POST",
+        body: { leaveType: form.type, startDate: form.from, endDate: form.to, reason: form.reason.trim() },
+      });
       setResult({ type: form.type, from: form.from, to: form.to, days, approver });
       setForm(blank);
+      loadMine();
+    } catch (err) {
+      setErrors({ reason: err.message });
+    } finally {
       setSending(false);
-    }, 700);
+    }
   };
 
   /* ---------- success ---------- */
@@ -137,7 +118,6 @@ Review and decide: ${window.location.origin}/approvals
           )}
           <div className="dx-actions">
             <Link to="/history" className="dx-btn primary">View my history</Link>
-            <Link to="/outbox" className="dx-btn"><FiMail /> See the email</Link>
             <button type="button" className="dx-btn" onClick={() => setResult(null)}>Apply for another</button>
           </div>
         </DxCard>

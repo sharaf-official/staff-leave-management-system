@@ -23,10 +23,10 @@ export default function FirstLogin() {
   const [show, setShow] = useState(false);
   const [error, setError] = useState("");
   const [done, setDone] = useState(false);
+  const [busy, setBusy] = useState(false);
 
-  if (!user) return <Navigate to="/login" replace />;
-  if (!user.mustChangePassword && !done) return <Navigate to="/dashboard" replace />;
-
+   if (!user) return <Navigate to="/login" replace />;
+  if (!user.mustChangePassword && !done && !busy) return <Navigate to="/dashboard" replace />;
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
     setError("");
@@ -41,15 +41,17 @@ export default function FirstLogin() {
   ];
   const canSubmit = form.current !== "" && checks.every((c) => c.ok);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!canSubmit) {
+    if (!canSubmit || busy) {
       setError("Please complete all the password requirements.");
       return;
     }
-    const result = changePassword(form.current, form.next);
+    setBusy(true);
+    const result = await changePassword(form.current, form.next);
     if (!result.ok) {
       setError(result.message);
+      setBusy(false);
       return;
     }
     setDone(true);

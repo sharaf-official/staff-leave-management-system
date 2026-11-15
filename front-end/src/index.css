@@ -1463,3 +1463,8 @@ body { background: radial-gradient(900px 420px at 100% -10%, #d6e6ff 0%, transpa
   .dx-table td { padding: 12px 8px; font-size: 13.5px; }
   .dx-table th { padding-left: 8px; padding-right: 8px; }
 }
+
+.ue-overlay { z-index: 1000; }
+.ue-share { white-space: pre-wrap; padding: 14px; border-radius: 12px; border: 1px solid rgba(128, 128, 128, 0.3); background: rgba(128, 128, 128, 0.08); font-size: 13.5px; }
+.ue-wa { display: inline-flex; align-items: center; gap: 7px; text-decoration: none; }
+.ue-overlay { z-index: 1000; }

@@ -1,23 +1,40 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { FiMail, FiTrash2, FiInbox } from "react-icons/fi";
 import { useAuth } from "../context/AuthContext";
-import { getOutbox, clearOutbox } from "../data/db";
+import { api } from "../api";
 
 const typeLabel = { invitation: "Invitation", leave_request: "Leave request", decision: "Decision" };
 
 export default function Outbox() {
   const { user } = useAuth();
-  const [version, setVersion] = useState(0);
+  const [mails, setMails] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
+  const [error, setError] = useState("");
 
-  /* eslint-disable-next-line react-hooks/exhaustive-deps*/
-  const mails = getOutbox(user, version);
+  const load = useCallback(async () => {
+    try {
+      const { mails: list } = await api("/outbox");
+      setMails(list);
+      setError("");
+    } catch (err) {
+      setError(err.message);
+    }
+  }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
   const selected = mails.find((m) => m.id === selectedId) || mails[0];
 
-  const clear = () => {
-    clearOutbox(user.companyId);
-    setSelectedId(null);
-    setVersion((v) => v + 1);
+  const clear = async () => {
+    try {
+      await api("/outbox", { method: "DELETE" });
+      setSelectedId(null);
+      await load();
+    } catch (err) {
+      setError(err.message);
+    }
   };
 
   return (
@@ -35,11 +52,13 @@ export default function Outbox() {
         )}
       </div>
 
+      {error && <div className="rv-toast" role="alert">{error}</div>}
+
       {mails.length === 0 ? (
         <div className="card ue-emptybox">
           <FiInbox />
           <h3>No emails yet</h3>
-          <p></p>
+          <p>Add an employee or submit a leave request and the email will appear here.</p>
         </div>
       ) : (
         <div className="ue-mail">

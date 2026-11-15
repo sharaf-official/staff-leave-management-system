@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { pool } from "../db.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
+import { deliver } from "../mailer.js";
 
 export const outboxRouter = Router();
 const router = Router();
@@ -25,6 +26,8 @@ async function logMail(companyId, to, type, subject, body) {
     "INSERT INTO email_log (company_id, to_email, type, subject, body) VALUES (?,?,?,?,?)",
     [companyId, to, type, subject, body]
   );
+  const [[c]] = await pool.query("SELECT name, email FROM companies WHERE id = ?", [companyId]);
+  deliver({ fromName: c?.name || "Leave Nest", replyTo: c?.email || undefined, to, subject, text: body });
 }
 
 function invitation(user, companyName, temp, invitedBy, origin) {
@@ -125,7 +128,7 @@ router.post("/:id/resend", requireRole("admin"), async (req, res) => {
   const [[admin]] = await pool.query("SELECT name FROM users WHERE id=?", [req.auth.id]);
   const mail = invitation(u, company.name, temp, admin.name, originOf(req));
   await logMail(u.company_id, u.email, "invitation", mail.subject, mail.body);
-  res.json({ ok: true });
+  res.json({ ok: true, tempPassword: temp });  
 });
 
 // email outbox
@@ -141,7 +144,7 @@ outboxRouter.get("/", async (req, res) => {
 
 outboxRouter.delete("/", requireRole("admin"), async (req, res) => {
   await pool.query("DELETE FROM email_log WHERE company_id=?", [req.auth.companyId]);
-  res.json({ ok: true });
+  res.json({ ok: true, tempPassword: temp });
 });
 
 export default router;

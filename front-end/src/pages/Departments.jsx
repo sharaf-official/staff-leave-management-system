@@ -1,17 +1,29 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { FiPlus, FiEdit2, FiTrash2 } from "react-icons/fi";
-import { departments as deptNames, staffList } from "../data/mockData";
+import { api } from "../api";
 
 export default function Departments() {
-  const [depts, setDepts] = useState(deptNames.map((name, i) => ({ id: i + 1, name })));
+  const [depts, setDepts] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [name, setName] = useState("");
   const [error, setError] = useState("");
   const [toDelete, setToDelete] = useState(null);
   const [message, setMessage] = useState("");
+  const [busy, setBusy] = useState(false);
 
-  const staffCount = (deptName) => staffList.filter((s) => s.department === deptName).length;
+  const load = useCallback(async () => {
+    try {
+      const { departments } = await api("/departments");
+      setDepts(departments);
+    } catch (err) {
+      setMessage(err.message);
+    }
+  }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
 
   const flash = (text) => {
     setMessage(text);
@@ -21,26 +33,37 @@ export default function Departments() {
   const openAdd = () => { setName(""); setEditingId(null); setError(""); setShowForm(true); };
   const openEdit = (d) => { setName(d.name); setEditingId(d.id); setError(""); setShowForm(true); };
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
+    if (busy) return;
     const value = name.trim();
     if (value.length < 2) return setError("Department name must be at least 2 characters.");
-    if (depts.some((d) => d.name.toLowerCase() === value.toLowerCase() && d.id !== editingId))
-      return setError("This department already exists.");
-
-    if (editingId === null) {
-      setDepts([...depts, { id: Date.now(), name: value }]);
-      flash("Department added.");
-    } else {
-      setDepts(depts.map((d) => (d.id === editingId ? { ...d, name: value } : d)));
-      flash("Department updated.");
+    setBusy(true);
+    try {
+      if (editingId === null) {
+        await api("/departments", { method: "POST", body: { name: value } });
+        flash("Department added.");
+      } else {
+        await api(`/departments/${editingId}`, { method: "PUT", body: { name: value } });
+        flash("Department updated.");
+      }
+      setShowForm(false);
+      await load();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
     }
-    setShowForm(false);
   };
 
-  const confirmDelete = () => {
-    setDepts(depts.filter((d) => d.id !== toDelete.id));
-    flash(`${toDelete.name} department deleted.`);
+  const confirmDelete = async () => {
+    try {
+      await api(`/departments/${toDelete.id}`, { method: "DELETE" });
+      flash(`${toDelete.name} department deleted.`);
+      await load();
+    } catch (err) {
+      flash(err.message);
+    }
     setToDelete(null);
   };
 
@@ -65,14 +88,14 @@ export default function Departments() {
                 <tr key={d.id}>
                   <td>{i + 1}</td>
                   <td>{d.name}</td>
-                  <td>{staffCount(d.name)}</td>
+                  <td>{d.staff}</td>
                   <td>
                     <div className="us-actions">
                       <button className="icon-btn" title="Edit" onClick={() => openEdit(d)}><FiEdit2 /></button>
                       <button
                         className="icon-btn danger"
-                        title={staffCount(d.name) > 0 ? "Department has staff" : "Delete"}
-                        disabled={staffCount(d.name) > 0}
+                        title={d.staff > 0 ? "Department has staff" : "Delete"}
+                        disabled={d.staff > 0}
                         onClick={() => setToDelete(d)}
                       >
                         <FiTrash2 />
@@ -100,7 +123,7 @@ export default function Departments() {
             </div>
             <div className="rv-actions">
               <button type="button" className="btn rv-cancel" onClick={() => setShowForm(false)}>Cancel</button>
-              <button type="submit" className="btn">{editingId === null ? "Add" : "Save changes"}</button>
+              <button type="submit" className="btn" disabled={busy}>{editingId === null ? "Add" : "Save changes"}</button>
             </div>
           </form>
         </div>
