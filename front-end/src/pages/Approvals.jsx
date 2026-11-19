@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { FiCheck, FiX } from "react-icons/fi";
 import { api } from "../api";
 import StatusBadge from "../components/StatusBadge";
+import { timeRange } from "../utils/time";
 
 export default function Approvals() {
   const [requests, setRequests] = useState([]);
@@ -25,6 +26,7 @@ export default function Approvals() {
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     load();
   }, [load]);
 
@@ -51,7 +53,7 @@ export default function Approvals() {
         method: "PATCH",
         body: { status: status.toLowerCase(), note: comment.trim() },
       });
-      setMessage(`${selected.employee}'s request was ${status.toLowerCase()}. They were notified by email.`);
+      setMessage(`${selected.employee}'s request was ${status.toLowerCase()}. They were notified.`);
       setSelected(null);
       setTimeout(() => setMessage(""), 4000);
       await load();
@@ -87,12 +89,12 @@ export default function Approvals() {
           <table>
             <thead>
               <tr>
-                <th>Employee</th><th>Type</th><th>From</th><th>To</th><th>Days</th><th>Status</th><th>Action</th>
+                <th>Employee</th><th>Type</th><th>From</th><th>To</th><th>Time</th><th>Days</th><th>Status</th><th>Action</th>
               </tr>
             </thead>
             <tbody>
               {shown.length === 0 && (
-                <tr><td colSpan="7" style={{ textAlign: "center", color: "var(--muted)" }}>No requests found.</td></tr>
+                <tr><td colSpan="8" style={{ textAlign: "center", color: "var(--muted)" }}>No requests found.</td></tr>
               )}
               {shown.map((r) => (
                 <tr key={r.id}>
@@ -100,6 +102,7 @@ export default function Approvals() {
                   <td>{r.type}</td>
                   <td>{r.from}</td>
                   <td>{r.to}</td>
+                  <td>{timeRange(r)}</td>
                   <td>{r.days}</td>
                   <td><StatusBadge status={r.status} /></td>
                   <td>
@@ -123,7 +126,8 @@ export default function Approvals() {
             <div className="rv-info">
               <p><b>Employee:</b> {selected.employee}</p>
               <p><b>Type:</b> {selected.type} leave</p>
-              <p><b>Dates:</b> {selected.from} to {selected.to} ({selected.days} day{selected.days > 1 ? "s" : ""})</p>
+              <p><b>Dates:</b> {selected.from === selected.to ? selected.from : `${selected.from} to ${selected.to}`}</p>
+              <p><b>Time:</b> {timeRange(selected)} ({selected.days} day{selected.days > 1 ? "s" : ""})</p>
               <p><b>Reason:</b> {selected.reason}</p>
             </div>
 

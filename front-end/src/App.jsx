@@ -14,6 +14,7 @@ import Users from "./pages/Users";
 import Departments from "./pages/Departments";
 import LeaveTypes from "./pages/LeaveTypes";
 import Reports from "./pages/Reports";
+import Company from "./pages/Company";
 import Outbox from "./pages/Outbox";
 import Profile from "./pages/Profile";
 
@@ -43,6 +44,7 @@ export default function App() {
         <Route path="/departments" element={<ProtectedRoute roles={ADMIN}><Departments /></ProtectedRoute>} />
         <Route path="/leave-types" element={<ProtectedRoute roles={ADMIN}><LeaveTypes /></ProtectedRoute>} />
         <Route path="/reports" element={<ProtectedRoute roles={ADMIN}><Reports /></ProtectedRoute>} />
+        <Route path="/company" element={<ProtectedRoute roles={ADMIN}><Company /></ProtectedRoute>} />
       </Route>
 
       <Route path="*" element={<Navigate to="/dashboard" replace />} />

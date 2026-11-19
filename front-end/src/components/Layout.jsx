@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
   FiGrid, FiPlusCircle, FiClock, FiCheckSquare, FiUsers, FiBriefcase, FiTag, FiBarChart2,
-  FiLogOut, FiMenu, FiUser, FiMoon, FiSun, FiMail,
+  FiLogOut, FiMenu, FiUser, FiMoon, FiSun, FiMail, FiSettings,
 } from "react-icons/fi";
 import { useAuth } from "../context/AuthContext";
 import NotificationBell from "./NotificationBell";
@@ -35,6 +35,7 @@ const menus = {
     { to: "/departments", label: "Departments", icon: <FiBriefcase /> },
     { to: "/leave-types", label: "Leave Types", icon: <FiTag /> },
     { to: "/reports", label: "Reports", icon: <FiBarChart2 /> },
+    { to: "/company", label: "Company", icon: <FiSettings /> },
     outboxLink,
     profileLink,
   ],

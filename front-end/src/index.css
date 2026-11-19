@@ -1471,3 +1471,25 @@ body { background: radial-gradient(900px 420px at 100% -10%, #d6e6ff 0%, transpa
 
 
 .rv-overlay { z-index: 1000; }
+
+
+
+.ap-field select {
+  width: 100%;
+  height: 48px;
+  padding: 0 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border, rgba(146, 166, 207, 0.25));
+  background: var(--card, #081433);
+  color: var(--text, #e8f0ff);
+  font: inherit;
+  cursor: pointer;
+}
+.ap-field select:focus {
+  outline: 2px solid #1262ff;
+  outline-offset: 1px;
+}
+.ap-field select option {
+  background: var(--card, #081433);
+  color: var(--text, #e8f0ff);
+}

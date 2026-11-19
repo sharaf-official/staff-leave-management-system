@@ -4,9 +4,8 @@ import {
   FiArrowLeft, FiArrowRight, FiCheck, FiCheckCircle, FiAlertCircle, FiMail, FiBriefcase, FiUser, FiUsers, FiClipboard,
 } from "react-icons/fi";
 import Logo from "../components/Logo";
-import { registerCompany, getMailsTo } from "../data/db";
+import { api } from "../api";
 
-const DEMO = import.meta.env.VITE_DEMO_MODE !== "false";
 const steps = [
   { label: "Company", icon: FiBriefcase },
   { label: "Admin", icon: FiUser },
@@ -28,6 +27,7 @@ export default function RegisterCompany() {
   const [formError, setFormError] = useState("");
   const [confirm, setConfirm] = useState(false);
   const [result, setResult] = useState(null);
+  const [saving, setSaving] = useState(false);
   const [company, setCompany] = useState({
     name: "", registrationNo: "", industry: "Technology", size: "1-10", phone: "", email: "", address: "", city: "", country: "Sri Lanka",
   });
@@ -71,15 +71,19 @@ export default function RegisterCompany() {
     setStep(step + 1);
   };
 
-  const submit = () => {
+  const submit = async () => {
+    if (saving) return;
     if (!confirm) return setFormError("Please confirm that the details are correct.");
-    const res = registerCompany({ company, admin, manager });
-    if (!res.ok) {
-      setFormError(res.message);
-      setStep(res.step);
-      return;
+    setSaving(true);
+    try {
+      const res = await api("/auth/register-company", { method: "POST", body: { company, admin, manager } });
+      setResult(res);
+    } catch (err) {
+      setFormError(err.message);
+      setStep(err.message.startsWith("Admin") ? 1 : err.message.startsWith("Manager") ? 2 : 0);
+    } finally {
+      setSaving(false);
     }
-    setResult(res);
   };
 
   const err = (key) => errors[key] && <p className="rc-err">{errors[key]}</p>;
@@ -101,7 +105,6 @@ export default function RegisterCompany() {
 
   /* ---------- success ---------- */
   if (result) {
-    const mails = DEMO ? getMailsTo(result.recipients.map((r) => r.email)) : [];
     return (
       <div className="lg-page rc-page">
         {shapes}
@@ -110,7 +113,7 @@ export default function RegisterCompany() {
             <div className="fl-done">
               <span className="fl-done-icon"><FiCheckCircle /></span>
               <h1>{result.company.name} is registered!</h1>
-              <p className="lg-hint">We sent an invitation email with a temporary password to:</p>
+              <p className="lg-hint">An invitation with a temporary password was created for:</p>
             </div>
             <ul className="rc-sent">
               {result.recipients.map((r) => (
@@ -118,22 +121,20 @@ export default function RegisterCompany() {
               ))}
             </ul>
             <p className="lg-hint">
-              Open the email, sign in with the temporary password and choose your own password. The temporary password
-              expires in 7 days.
+              Open the invitation below, sign in with the temporary password and choose your own password. The temporary
+              password expires in 7 days.
             </p>
 
-            {DEMO && (
-              <details className="rc-preview">
-                <summary>View invitation emails (demo preview)</summary>
-                {mails.map((m) => (
-                  <div className="rc-mail" key={m.id}>
-                    <b>{m.subject}</b>
-                    <small>To: {m.to}</small>
-                    <pre>{m.body}</pre>
-                  </div>
-                ))}
-              </details>
-            )}
+            <details className="rc-preview" open>
+              <summary>Invitation emails (preview, real email is not connected yet)</summary>
+              {result.mails.map((m) => (
+                <div className="rc-mail" key={m.id}>
+                  <b>{m.subject}</b>
+                  <small>To: {m.to}</small>
+                  <pre>{m.body}</pre>
+                </div>
+              ))}
+            </details>
 
             <Link to="/login" className="lg-submit rc-go">Go to sign in <FiArrowRight className="lg-arrow" /></Link>
           </div>
@@ -237,7 +238,9 @@ export default function RegisterCompany() {
             {step < 3 ? (
               <button type="button" className="lg-submit rc-next" onClick={next}>Continue <FiArrowRight className="lg-arrow" /></button>
             ) : (
-              <button type="button" className="lg-submit rc-next" onClick={submit}>Register company <FiCheck /></button>
+              <button type="button" className="lg-submit rc-next" onClick={submit} disabled={saving}>
+                {saving ? "Registering..." : <>Register company <FiCheck /></>}
+              </button>
             )}
           </div>
         </div>

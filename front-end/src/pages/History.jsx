@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { api } from "../api";
 import StatusBadge from "../components/StatusBadge";
+import { timeRange } from "../utils/time";
 
 export default function History() {
   const [requests, setRequests] = useState([]);
+  const [typeList, setTypeList] = useState([]);
   const [status, setStatus] = useState("");
   const [type, setType] = useState("");
   const [message, setMessage] = useState("");
@@ -19,8 +21,13 @@ export default function History() {
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     load();
   }, [load]);
+
+  useEffect(() => {
+    api("/leave-types").then(({ leaveTypes }) => setTypeList(leaveTypes)).catch(() => {});
+  }, []);
 
   const filtered = requests.filter(
     (r) => (!status || r.status === status) && (!type || r.type === type)
@@ -54,20 +61,20 @@ export default function History() {
           </select>
           <select value={type} onChange={(e) => setType(e.target.value)}>
             <option value="">All leave types</option>
-            <option>Annual</option>
-            <option>Sick</option>
-            <option>Casual</option>
+            {typeList.map((t) => (
+              <option key={t.id ?? t.name}>{t.name}</option>
+            ))}
           </select>
         </div>
 
         <div className="table-wrap">
           <table>
             <thead>
-              <tr><th>#</th><th>Type</th><th>From</th><th>To</th><th>Days</th><th>Status</th><th>Action</th></tr>
+              <tr><th>#</th><th>Type</th><th>From</th><th>To</th><th>Time</th><th>Days</th><th>Status</th><th>Action</th></tr>
             </thead>
             <tbody>
               {filtered.length === 0 ? (
-                <tr><td colSpan="7">No leave requests found</td></tr>
+                <tr><td colSpan="8">No leave requests found</td></tr>
               ) : (
                 filtered.map((r) => (
                   <tr key={r.id}>
@@ -75,6 +82,7 @@ export default function History() {
                     <td>{r.type}</td>
                     <td>{r.from}</td>
                     <td>{r.to}</td>
+                    <td>{timeRange(r)}</td>
                     <td>{r.days}</td>
                     <td><StatusBadge status={r.status} /></td>
                     <td>

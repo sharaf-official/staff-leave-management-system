@@ -7,6 +7,8 @@ import usersRoutes, { outboxRouter } from "./routes/users.js";
 import leavesRoutes from "./routes/leaves.js";
 import departmentsRoutes from "./routes/departments.js";
 import leaveTypesRoutes from "./routes/leaveTypes.js";
+import notificationsRoutes from "./routes/notifications.js";
+import companyRoutes from "./routes/company.js";
 
 const app = express();
 app.use(cors({ origin: ["http://localhost:5173"] }));
@@ -23,6 +25,8 @@ app.use("/api/outbox", outboxRouter);
 app.use("/api/leaves", leavesRoutes);
 app.use("/api/departments", departmentsRoutes);
 app.use("/api/leave-types", leaveTypesRoutes);
+app.use("/api/notifications", notificationsRoutes);
+app.use("/api/company", companyRoutes);
 
 app.use((err, _req, res, _next) => {
   console.error(err);

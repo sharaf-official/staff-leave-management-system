@@ -5,24 +5,33 @@ import { api } from "../api";
 import { usedDays } from "../utils/leaves";
 import { DxHead, DxCard } from "../components/Dx";
 import { localToday, plural } from "../utils/format";
+import { t12, leaveDays, hoursText, toMinutes } from "../utils/time";
 
 const longDate = (iso) =>
   new Date(`${iso}T00:00:00`).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 
-// working days between two ISO dates (Mon - Fri), both included
-const workingDays = (from, to) => {
-  let count = 0;
+const hasWeekday = (from, to) => {
   const d = new Date(`${from}T00:00:00`);
   const end = new Date(`${to}T00:00:00`);
   while (d <= end) {
-    const day = d.getDay();
-    if (day !== 0 && day !== 6) count++;
+    if (d.getDay() !== 0 && d.getDay() !== 6) return true;
     d.setDate(d.getDate() + 1);
   }
-  return count;
+  return false;
 };
 
-const blank = { type: "", from: "", to: "", reason: "" };
+const presets = [
+  { label: "Full day", start: "09:00", end: "17:00" },
+  { label: "Morning", start: "09:00", end: "13:00" },
+  { label: "Afternoon", start: "13:00", end: "17:00" },
+];
+const blank = { type: "", from: "", to: "", startTime: "09:00", endTime: "17:00", reason: "" };
+
+// office hours 9:00 AM - 5:00 PM, every 30 minutes (looks the same on every computer)
+const timeSlots = Array.from({ length: 17 }, (_, i) => {
+  const m = 540 + i * 30;
+  return `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
+});
 
 export default function ApplyLeave() {
   const today = localToday();
@@ -50,11 +59,18 @@ export default function ApplyLeave() {
   }));
   const selected = types.find((t) => t.name === form.type);
 
-  const days = form.from && form.to && form.to >= form.from ? workingDays(form.from, form.to) : 0;
+  const datesOk = form.from !== "" && form.to !== "" && form.to >= form.from;
+  const oneDay = datesOk && form.from === form.to;
+  const days = datesOk ? leaveDays(form.from, form.to, form.startTime, form.endTime) : 0;
 
   const set = (name, value) => {
     setForm((f) => ({ ...f, [name]: value }));
-    setErrors((e) => ({ ...e, [name]: "" }));
+    setErrors((e) => ({ ...e, [name]: "", time: name.endsWith("Time") ? "" : e.time }));
+  };
+
+  const onStartDate = (value) => {
+    setForm((f) => ({ ...f, from: value, to: !f.to || value > f.to ? value : f.to }));
+    setErrors((e) => ({ ...e, from: "", to: "" }));
   };
 
   const validate = () => {
@@ -66,13 +82,22 @@ export default function ApplyLeave() {
     else if (form.from && form.to < form.from) e.to = "End date cannot be before the start date.";
 
     if (!e.from && !e.to && form.from && form.to) {
-      if (days === 0) e.to = "These dates are weekends only. Choose working days.";
+      if (!hasWeekday(form.from, form.to)) e.to = "These dates are weekends only. Choose working days.";
+      else if (oneDay && toMinutes(form.endTime) - toMinutes(form.startTime) < 60)
+        e.time = "The end time must be at least 1 hour after the start time.";
+      else if (days === 0) e.time = "There is no working time between these dates and times.";
       else if (selected && days > selected.remaining)
         e.type = `You only have ${plural(selected.remaining, "day")} of ${selected.name.toLowerCase()} leave left.`;
+
+      // clash = the two date+time ranges overlap
+      const a0 = `${form.from} ${form.startTime}`;
+      const a1 = `${form.to} ${form.endTime}`;
       const clash = mine.find(
-        (r) => (r.status === "Pending" || r.status === "Approved") && form.from <= r.to && form.to >= r.from
+        (r) =>
+          (r.status === "Pending" || r.status === "Approved") &&
+          a0 < `${r.to} ${r.endTime}` && `${r.from} ${r.startTime}` < a1
       );
-      if (clash) e.from = `You already have a ${clash.status.toLowerCase()} request on these dates.`;
+      if (clash) e.from = `You already have a ${clash.status.toLowerCase()} request that overlaps this.`;
     }
     if (form.reason.trim().length < 10) e.reason = "Please give a short reason (at least 10 characters).";
     return e;
@@ -88,9 +113,19 @@ export default function ApplyLeave() {
     try {
       await api("/leaves", {
         method: "POST",
-        body: { leaveType: form.type, startDate: form.from, endDate: form.to, reason: form.reason.trim() },
+        body: {
+          leaveType: form.type,
+          startDate: form.from,
+          endDate: form.to,
+          startTime: form.startTime,
+          endTime: form.endTime,
+          reason: form.reason.trim(),
+        },
       });
-      setResult({ type: form.type, from: form.from, to: form.to, days, approver });
+      setResult({
+        type: form.type, from: form.from, to: form.to, days,
+        startTime: form.startTime, endTime: form.endTime, approver,
+      });
       setForm(blank);
       loadMine();
     } catch (err) {
@@ -102,6 +137,7 @@ export default function ApplyLeave() {
 
   /* ---------- success ---------- */
   if (result) {
+    const single = result.from === result.to;
     return (
       <div className="dx">
         <DxHead eyebrow="Leave request" title="Request submitted" />
@@ -109,12 +145,15 @@ export default function ApplyLeave() {
           <span className="ap-done-icon"><FiCheckCircle /></span>
           <h2>Your request is with {result.approver ? result.approver.name : "your approver"}</h2>
           <p className="dx-muted">
-            {result.type} leave, {result.from === result.to ? longDate(result.from) : `${longDate(result.from)} to ${longDate(result.to)}`}
+            {result.type} leave,{" "}
+            {single
+              ? `${longDate(result.from)}, ${t12(result.startTime)} to ${t12(result.endTime)}`
+              : `${longDate(result.from)} ${t12(result.startTime)} to ${longDate(result.to)} ${t12(result.endTime)}`}
             {" "}({plural(result.days, "working day")}). Status: <b>Pending</b>.
           </p>
           {result.approver && (
             <p className="dx-note ap-mailnote">
-              <FiMail /> An email was sent to <b>{result.approver.email}</b>. You will be emailed when it is decided.
+              <FiMail /> {result.approver.name} was notified in the app and by email ({result.approver.email}). You will be notified when it is decided.
             </p>
           )}
           <div className="dx-actions">
@@ -129,12 +168,21 @@ export default function ApplyLeave() {
   /* ---------- form ---------- */
   const after = selected && days > 0 ? selected.remaining - days : null;
 
+  const timeSelect = (id, label, name) => (
+    <div className="ap-field">
+      <label className="ap-label" htmlFor={id}>{label}</label>
+      <select id={id} value={form[name]} onChange={(e) => set(name, e.target.value)}>
+        {timeSlots.map((t) => <option key={t} value={t}>{t12(t)}</option>)}
+      </select>
+    </div>
+  );
+
   return (
     <div className="dx">
       <DxHead
         eyebrow="Leave request"
         title="Apply for leave"
-        subtitle="Choose the type and dates. Your approver is notified by email."
+        subtitle="Choose the type, dates and times. Your approver is notified."
       />
 
       <div className="dx-grid">
@@ -165,16 +213,51 @@ export default function ApplyLeave() {
               <div className="ap-field">
                 <label className="ap-label" htmlFor="ap-from">Start date</label>
                 <input id="ap-from" type="date" min={today} value={form.from}
-                       onChange={(e) => { set("from", e.target.value); if (form.to && e.target.value > form.to) set("to", ""); }} />
+                       onChange={(e) => onStartDate(e.target.value)} />
                 {errors.from && <p className="ap-err">{errors.from}</p>}
               </div>
+              {timeSelect("ap-st", "Start time", "startTime")}
+            </div>
+
+            <div className="ap-row">
               <div className="ap-field">
                 <label className="ap-label" htmlFor="ap-to">End date</label>
                 <input id="ap-to" type="date" min={form.from || today} value={form.to}
                        onChange={(e) => set("to", e.target.value)} />
                 {errors.to && <p className="ap-err">{errors.to}</p>}
               </div>
+              {timeSelect("ap-et", "End time", "endTime")}
             </div>
+
+            {errors.time && <p className="ap-err">{errors.time}</p>}
+
+            {oneDay && (
+              <div className="ap-field">
+                <span className="ap-label" id="ap-quick-label">Quick pick</span>
+                <div className="ap-types" role="radiogroup" aria-labelledby="ap-quick-label">
+                  {presets.map((p) => {
+                    const on = form.startTime === p.start && form.endTime === p.end;
+                    return (
+                      <button
+                        key={p.label}
+                        type="button"
+                        role="radio"
+                        aria-checked={on}
+                        className={`ap-type ${on ? "on" : ""}`}
+                        onClick={() => setForm((f) => ({ ...f, startTime: p.start, endTime: p.end }))}
+                      >
+                        <b>{p.label}</b>
+                        <small>{t12(p.start)} - {t12(p.end)}</small>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            <small className="dx-muted">
+              Office hours are 9:00 AM - 5:00 PM. On each working day, up to 4 hours counts as a half day (0.5) and more than 4 hours as a full day.
+            </small>
 
             <div className="ap-field">
               <label className="ap-label" htmlFor="ap-reason">Reason</label>
@@ -203,11 +286,16 @@ export default function ApplyLeave() {
             <dl className="ap-sum">
               <div><dt>Leave type</dt><dd>{form.type ? `${form.type} leave` : "-"}</dd></div>
               <div>
-                <dt>Dates</dt>
-                <dd>{form.from && form.to && form.to >= form.from
-                  ? form.from === form.to ? longDate(form.from) : `${longDate(form.from)} to ${longDate(form.to)}`
-                  : "-"}</dd>
+                <dt>From</dt>
+                <dd>{form.from ? `${longDate(form.from)}, ${t12(form.startTime)}` : "-"}</dd>
               </div>
+              <div>
+                <dt>To</dt>
+                <dd>{form.to && form.to >= form.from ? `${longDate(form.to)}, ${t12(form.endTime)}` : "-"}</dd>
+              </div>
+              {oneDay && days > 0 && (
+                <div><dt>Hours</dt><dd>{hoursText(form.startTime, form.endTime)}</dd></div>
+              )}
               <div><dt>Working days</dt><dd>{days > 0 ? days : "-"}</dd></div>
               <div>
                 <dt>Balance after</dt>
