@@ -3,7 +3,6 @@ import { FiFileText, FiCheckCircle, FiClock, FiXCircle, FiDownload } from "react
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { api } from "../api";
-import { leaveTypeList } from "../data/mockData";
 import StatCard from "../components/StatCard";
 import StatusBadge from "../components/StatusBadge";
 
@@ -13,11 +12,13 @@ export default function Reports() {
   const [filters, setFilters] = useState(initialFilters);
   const [reportData, setReportData] = useState([]);
   const [departments, setDepartments] = useState([]);
+  const [leaveTypes, setLeaveTypes] = useState([]);
   const [error, setError] = useState("");
 
   useEffect(() => {
     api("/leaves").then(({ leaves }) => setReportData(leaves)).catch((err) => setError(err.message));
     api("/departments").then(({ departments: d }) => setDepartments(d.map((x) => x.name))).catch(() => {});
+    api("/leave-types").then(({ leaveTypes: t }) => setLeaveTypes(t)).catch(() => {});
   }, []);
 
   const handleChange = (e) => setFilters({ ...filters, [e.target.name]: e.target.value });
@@ -162,7 +163,7 @@ export default function Reports() {
             <label htmlFor="type">Leave type</label>
             <select id="type" name="type" value={filters.type} onChange={handleChange}>
               <option>All</option>
-              {leaveTypeList.map((t) => <option key={t.id}>{t.name}</option>)}
+              {leaveTypes.map((t) => <option key={t.id}>{t.name}</option>)}
             </select>
           </div>
           <div className="us-field">

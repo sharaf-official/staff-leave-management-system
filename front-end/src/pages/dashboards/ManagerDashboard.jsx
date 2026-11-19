@@ -11,17 +11,19 @@ export default function ManagerDashboard() {
   const { user } = useAuth();
   const [teamRequests, setTeamRequests] = useState([]);
   const [mine, setMine] = useState([]);
+  const [typeList, setTypeList] = useState([]);
 
   useEffect(() => {
     api("/leaves").then(({ leaves }) => setTeamRequests(leaves)).catch(() => {});
     api("/leaves/mine").then(({ leaves }) => setMine(leaves)).catch(() => {});
+    api("/leave-types").then(({ leaveTypes }) => setTypeList(leaveTypes)).catch(() => {});
   }, []);
 
   const pending = teamRequests.filter((r) => r.status === "Pending");
   const approved = teamRequests.filter((r) => r.status === "Approved").length;
   const rejected = teamRequests.filter((r) => r.status === "Rejected").length;
 
-  const balances = buildBalances(mine);
+  const balances = buildBalances(mine, typeList);
 
   return (
     <div className="dx">

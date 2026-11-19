@@ -1493,3 +1493,71 @@ body { background: radial-gradient(900px 420px at 100% -10%, #d6e6ff 0%, transpa
   background: var(--card, #081433);
   color: var(--text, #e8f0ff);
 }
+
+/* ---------- Announcements ---------- */
+.an-form textarea {
+  width: 100%;
+  min-height: 110px;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+.an-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 8px;
+}
+
+.an-item {
+  display: flex;
+  gap: 14px;
+  padding: 16px 18px;
+  border-radius: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  background: rgba(59, 130, 246, 0.06);
+  border-left: 4px solid #3b82f6;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+.an-item:hover {
+  transform: translateY(-2px);
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.an-avatar {
+  flex: 0 0 42px;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(135deg, #3b82f6, #6366f1);
+}
+
+.an-body { flex: 1; min-width: 0; }
+.an-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.an-title { margin: 0; font-size: 1.05rem; }
+.an-text { margin: 8px 0 10px; white-space: pre-wrap; line-height: 1.55; }
+.an-meta { color: var(--muted); font-size: 0.82rem; }
+
+.an-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 9px;
+  border-radius: 999px;
+  text-transform: capitalize;
+  background: rgba(99, 102, 241, 0.2);
+  color: #a5b4fc;
+}
+.an-badge.admin { background: rgba(239, 68, 68, 0.2); color: #fca5a5; }
+
+.an-new {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #22c55e;
+  color: #fff;
+}

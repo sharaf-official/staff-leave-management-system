@@ -2,6 +2,7 @@ import { Router } from "express";
 import { pool } from "../db.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
 import { notify } from "../notify.js";
+import { deliver } from "../mailer.js";
 
 const router = Router();
 router.use(requireAuth);
@@ -101,6 +102,8 @@ async function logMail(companyId, to, type, subject, body) {
     "INSERT INTO email_log (company_id, to_email, type, subject, body) VALUES (?,?,?,?,?)",
     [companyId, to, type, subject, body]
   );
+  // real email (does nothing when MAIL_ENABLED is not "true"; never throws)
+  deliver({ fromName: "Leave Nest", to, subject, text: body });
 }
 
 async function findApprover(me) {

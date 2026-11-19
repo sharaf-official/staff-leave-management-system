@@ -17,6 +17,7 @@ import Reports from "./pages/Reports";
 import Company from "./pages/Company";
 import Outbox from "./pages/Outbox";
 import Profile from "./pages/Profile";
+import Announcements from "./pages/Announcements";
 
 const STAFF = ["employee", "manager"];
 const MANAGER = ["manager", "admin"];
@@ -35,7 +36,8 @@ export default function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/outbox" element={<Outbox />} />
-
+        <Route path="/announcements" element={<Announcements />} />
+        
         <Route path="/apply" element={<ProtectedRoute roles={STAFF}><ApplyLeave /></ProtectedRoute>} />
         <Route path="/history" element={<ProtectedRoute roles={STAFF}><History /></ProtectedRoute>} />
         <Route path="/approvals" element={<ProtectedRoute roles={MANAGER}><Approvals /></ProtectedRoute>} />

@@ -2,12 +2,23 @@ import crypto from "crypto";
 import { Router } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import rateLimit from "express-rate-limit";
 import { pool } from "../db.js";
 import { requireAuth } from "../middleware/auth.js";
 
 const router = Router();
 
+// max 10 login attempts per 15 minutes per IP
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: "Too many login attempts. Please try again in 15 minutes." },
+});
+
 const publicUser = (u) => ({
+
   id: u.id,
   companyId: u.company_id,
   name: u.name,
@@ -30,7 +41,7 @@ const tempPassword = () => {
   return `Nest-${pick("abcdefghjkmnpqrstuvwxyz23456789", 4)}-${pick("ABCDEFGHJKMNPQRSTUVWXYZ", 2)}${pick("23456789", 2)}`;
 };
 
-router.post("/login", async (req, res) => {
+router.post("/login", loginLimiter, async (req, res) => {
   const email = String(req.body.email || "").trim().toLowerCase();
   const password = String(req.body.password || "");
   if (!email || !password) return res.status(400).json({ message: "Enter email and password." });
@@ -86,8 +97,7 @@ router.post("/register-company", async (req, res) => {
   try {
     await conn.beginTransaction();
     const [c] = await conn.query(
-      `INSERT INTO companies (name, registration_no, industry, size_range, phone, email, address, city, country, is_demo)
-       VALUES (?,?,?,?,?,?,?,?,?,0)`,
+      `INSERT INTO companies (name, registration_no, industry, size, phone, email, address, city, country, is_demo)       VALUES (?,?,?,?,?,?,?,?,?,0)`,
       [cName, clean(company.registrationNo), clean(company.industry), clean(company.size), clean(company.phone),
        clean(company.email).toLowerCase(), clean(company.address), clean(company.city), clean(company.country) || "Sri Lanka"]
     );

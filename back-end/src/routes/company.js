@@ -13,7 +13,7 @@ const map = (r) => ({
   name: r.name,
   registrationNo: r.registration_no || "",
   industry: r.industry || "",
-  size: r.size_range || "",
+  size: r.size || "",
   phone: r.phone || "",
   email: r.email || "",
   address: r.address || "",
@@ -49,8 +49,7 @@ router.put("/", requireRole("admin"), async (req, res) => {
   if (dup.length) return res.status(409).json({ message: "Another company already uses this name." });
 
   await pool.query(
-    `UPDATE companies SET name=?, registration_no=?, industry=?, size_range=?, phone=?, email=?, address=?, city=?, country=?
-     WHERE id=?`,
+    `UPDATE companies SET name=?, registration_no=?, industry=?, size=?, phone=?, email=?, address=?, city=?, country=?     WHERE id=?`,
     [name, clean(b.registrationNo, 60), clean(b.industry, 60), clean(b.size, 20), phone, email,
      clean(b.address, 255), city, clean(b.country, 80) || "Sri Lanka", req.auth.companyId]
   );

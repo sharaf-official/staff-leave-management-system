@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
   FiGrid, FiPlusCircle, FiClock, FiCheckSquare, FiUsers, FiBriefcase, FiTag, FiBarChart2,
-  FiLogOut, FiMenu, FiUser, FiMoon, FiSun, FiMail, FiSettings,
+  FiLogOut, FiMenu, FiUser, FiMoon, FiSun, FiMail, FiSettings, FiVolume2,
+
 } from "react-icons/fi";
 import { useAuth } from "../context/AuthContext";
 import NotificationBell from "./NotificationBell";
@@ -11,12 +12,15 @@ import { getAvatar } from "../utils/avatar";
 
 const profileLink = { to: "/profile", label: "My Profile", icon: <FiUser /> };
 const outboxLink = { to: "/outbox", label: "Email Outbox", icon: <FiMail /> };
+const announceLink = { to: "/announcements", label: "Announcements", icon: <FiVolume2 /> };
 
 const menus = {
   employee: [
     { to: "/dashboard", label: "Dashboard", icon: <FiGrid /> },
     { to: "/apply", label: "Apply Leave", icon: <FiPlusCircle /> },
     { to: "/history", label: "My History", icon: <FiClock /> },
+    outboxLink,
+    announceLink,
     outboxLink,
     profileLink,
   ],
@@ -25,6 +29,7 @@ const menus = {
     { to: "/apply", label: "Apply Leave", icon: <FiPlusCircle /> },
     { to: "/history", label: "My History", icon: <FiClock /> },
     { to: "/approvals", label: "Team Requests", icon: <FiCheckSquare /> },
+    announceLink,
     outboxLink,
     profileLink,
   ],
@@ -36,6 +41,7 @@ const menus = {
     { to: "/leave-types", label: "Leave Types", icon: <FiTag /> },
     { to: "/reports", label: "Reports", icon: <FiBarChart2 /> },
     { to: "/company", label: "Company", icon: <FiSettings /> },
+    announceLink,
     outboxLink,
     profileLink,
   ],

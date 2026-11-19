@@ -23,8 +23,11 @@ export default function LeaveTypes() {
     }
   }, []);
 
-  useEffect(() => { load(); }, [load]);
-
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    load();
+  }, [load]);
+  
   const flash = (text) => {
     setMessage(text);
     setTimeout(() => setMessage(""), 3000);
