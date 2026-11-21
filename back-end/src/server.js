@@ -14,6 +14,7 @@ import announcementsRoutes from "./routes/announcements.js";
 import holidaysRoutes from "./routes/holidays.js";
 const app = express();
 app.set("trust proxy", 1);
+app.set("trust proxy", 1);
 
 app.use(helmet());
 app.use(cors({
