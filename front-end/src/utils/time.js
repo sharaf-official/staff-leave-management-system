@@ -16,7 +16,7 @@ const OFFICE_END = 1020; // 5:00 PM
 const dayPart = (mins) => (mins <= 0 ? 0 : mins <= 240 ? 0.5 : 1);
 
 // leave from (date + time) to (date + time). Weekends are skipped.
-export const leaveDays = (from, to, startTime, endTime) => {
+export const leaveDays = (from, to, startTime, endTime, off = new Set()) => {
   if (!from || !to || to < from) return 0;
   const first = new Date(`${from}T00:00:00`).getTime();
   const last = new Date(`${to}T00:00:00`).getTime();
@@ -24,6 +24,8 @@ export const leaveDays = (from, to, startTime, endTime) => {
   for (const d = new Date(first); d.getTime() <= last; d.setDate(d.getDate() + 1)) {
     const wd = d.getDay();
     if (wd === 0 || wd === 6) continue;
+    const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    if (off.has(iso)) continue;
     const t = d.getTime();
     const s = t === first ? toMinutes(startTime) : OFFICE_START;
     const e = t === last ? toMinutes(endTime) : OFFICE_END;

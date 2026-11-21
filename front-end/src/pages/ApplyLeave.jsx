@@ -42,6 +42,7 @@ export default function ApplyLeave() {
   const [mine, setMine] = useState([]);
   const [approver, setApprover] = useState(null);
   const [typeList, setTypeList] = useState([]);
+  const [holidays, setHolidays] = useState(() => new Set());
 
   const loadMine = () =>
     api("/leaves/mine").then(({ leaves }) => setMine(leaves)).catch(() => {});
@@ -50,7 +51,8 @@ export default function ApplyLeave() {
     loadMine();
     api("/leaves/approver").then(({ approver: a }) => setApprover(a)).catch(() => {});
     api("/leave-types").then(({ leaveTypes }) => setTypeList(leaveTypes)).catch(() => {});
-  }, []);
+    api("/holidays").then(({ holidays: h }) => setHolidays(new Set(h.map((x) => x.date)))).catch(() => {});
+    }, []);
 
   const types = typeList.map((t) => ({
     name: t.name,
@@ -61,8 +63,7 @@ export default function ApplyLeave() {
 
   const datesOk = form.from !== "" && form.to !== "" && form.to >= form.from;
   const oneDay = datesOk && form.from === form.to;
-  const days = datesOk ? leaveDays(form.from, form.to, form.startTime, form.endTime) : 0;
-
+  const days = datesOk ? leaveDays(form.from, form.to, form.startTime, form.endTime, holidays) : 0;
   const set = (name, value) => {
     setForm((f) => ({ ...f, [name]: value }));
     setErrors((e) => ({ ...e, [name]: "", time: name.endsWith("Time") ? "" : e.time }));

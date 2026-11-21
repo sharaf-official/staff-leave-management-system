@@ -1561,3 +1561,30 @@ body { background: radial-gradient(900px 420px at 100% -10%, #d6e6ff 0%, transpa
   background: #22c55e;
   color: #fff;
 }
+
+/* ---------- Loading bar ---------- */
+.lb-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  z-index: 9999;
+  overflow: hidden;
+  background: rgba(59, 130, 246, 0.15);
+}
+.lb-bar span {
+  display: block;
+  height: 100%;
+  width: 40%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, #3b82f6, #6366f1);
+  animation: lb-move 1s ease-in-out infinite;
+}
+@keyframes lb-move {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(350%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lb-bar span { animation: none; width: 100%; }
+}

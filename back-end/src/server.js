@@ -11,6 +11,7 @@ import leaveTypesRoutes from "./routes/leaveTypes.js";
 import notificationsRoutes from "./routes/notifications.js";
 import companyRoutes from "./routes/company.js";
 import announcementsRoutes from "./routes/announcements.js";
+import holidaysRoutes from "./routes/holidays.js";
 const app = express();
 app.use(helmet());
 app.use(cors({ origin: ["http://localhost:5173"] }));
@@ -30,6 +31,7 @@ app.use("/api/leave-types", leaveTypesRoutes);
 app.use("/api/notifications", notificationsRoutes);
 app.use("/api/company", companyRoutes);
 app.use("/api/announcements", announcementsRoutes);
+app.use("/api/holidays", holidaysRoutes);
 
 app.use((err, _req, res, _next) => {
   console.error(err);

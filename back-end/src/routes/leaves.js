@@ -41,13 +41,15 @@ const dayText = (a, b) => (a === b ? a : `${a} to ${b}`);
 const dayPart = (mins) => (mins <= 0 ? 0 : mins <= 240 ? 0.5 : 1);
 
 // leave from (date + time) to (date + time); weekends are skipped, a working day is 9:00 - 17:00
-const leaveDays = (startDate, endDate, startTime, endTime) => {
+const leaveDays = (startDate, endDate, startTime, endTime, off = new Set()) => {
   const first = new Date(`${startDate}T00:00:00`).getTime();
   const last = new Date(`${endDate}T00:00:00`).getTime();
   let total = 0;
   for (const d = new Date(first); d.getTime() <= last; d.setDate(d.getDate() + 1)) {
     const wd = d.getDay();
     if (wd === 0 || wd === 6) continue;
+    const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    if (off.has(iso)) continue;
     const t = d.getTime();
     const s = t === first ? minutes(startTime) : 540;
     const e = t === last ? minutes(endTime) : 1020;
@@ -146,7 +148,12 @@ router.post("/", async (req, res) => {
   if (startDate === endDate && minutes(endTime) - minutes(startTime) < 60)
     return res.status(400).json({ message: "The end time must be at least 1 hour after the start time." });
 
-  const days = leaveDays(startDate, endDate, startTime, endTime);
+  const [hol] = await pool.query(
+    "SELECT DATE_FORMAT(holiday_date, '%Y-%m-%d') AS d FROM holidays WHERE company_id = ? AND holiday_date BETWEEN ? AND ?",
+    [req.auth.companyId, startDate, endDate]
+  );
+  const off = new Set(hol.map((h) => h.d));
+  const days = leaveDays(startDate, endDate, startTime, endTime, off);
   if (days === 0) return res.status(400).json({ message: "There is no working time between these dates and times." });
 
   // session is only used by older screens

@@ -18,6 +18,8 @@ import Company from "./pages/Company";
 import Outbox from "./pages/Outbox";
 import Profile from "./pages/Profile";
 import Announcements from "./pages/Announcements";
+import Holidays from "./pages/Holidays";
+import LoadingBar from "./components/LoadingBar";
 
 const STAFF = ["employee", "manager"];
 const MANAGER = ["manager", "admin"];
@@ -25,6 +27,8 @@ const ADMIN = ["admin"];
 
 export default function App() {
   return (
+    <>
+    <LoadingBar />
     <Routes>
       {/* public pages */}
       <Route path="/login" element={<Login />} />
@@ -37,7 +41,8 @@ export default function App() {
         <Route path="/profile" element={<Profile />} />
         <Route path="/outbox" element={<Outbox />} />
         <Route path="/announcements" element={<Announcements />} />
-        
+        <Route path="/holidays" element={<Holidays />} />
+
         <Route path="/apply" element={<ProtectedRoute roles={STAFF}><ApplyLeave /></ProtectedRoute>} />
         <Route path="/history" element={<ProtectedRoute roles={STAFF}><History /></ProtectedRoute>} />
         <Route path="/approvals" element={<ProtectedRoute roles={MANAGER}><Approvals /></ProtectedRoute>} />
@@ -51,5 +56,6 @@ export default function App() {
 
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
+    </>
   );
 }
