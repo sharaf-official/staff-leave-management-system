@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import {
-  FiArrowLeft, FiArrowRight, FiCheck, FiCheckCircle, FiAlertCircle, FiMail, FiBriefcase, FiUser, FiUsers, FiClipboard,
+  FiArrowLeft, FiArrowRight, FiCheck, FiCheckCircle, FiAlertCircle, FiMail, FiBriefcase, FiUser, FiUsers,
+  FiClipboard, FiCopy, FiMessageCircle,
 } from "react-icons/fi";
 import Logo from "../components/Logo";
 import { api } from "../api";
@@ -21,13 +22,34 @@ const maskEmail = (email) => {
   return `${local[0]}***@${domain}`;
 };
 
+const waNumber = (phone) => {
+  const d = String(phone || "").replace(/\D/g, "");
+  if (!d) return "";
+  if (d.startsWith("94")) return d;
+  if (d.startsWith("0")) return `94${d.slice(1)}`;
+  return d;
+};
+
+const shareText = (c, companyName) =>
+`Hi ${c.name.split(" ")[0]},
+
+${companyName} has been registered on Leave Nest and you are the ${c.role.toLowerCase()}.
+
+Sign in: ${window.location.origin}/#/login
+Email: ${c.email}
+Temporary password: ${c.tempPassword}
+
+You must change this password the first time you sign in. It is valid for 7 days.`;
+
 export default function RegisterCompany() {
   const [step, setStep] = useState(0);
   const [errors, setErrors] = useState({});
   const [formError, setFormError] = useState("");
   const [confirm, setConfirm] = useState(false);
+  const [sendEmails, setSendEmails] = useState(true);
   const [result, setResult] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [copied, setCopied] = useState("");
   const [company, setCompany] = useState({
     name: "", registrationNo: "", industry: "Technology", size: "1-10", phone: "", email: "", address: "", city: "", country: "Sri Lanka",
   });
@@ -71,18 +93,38 @@ export default function RegisterCompany() {
     setStep(step + 1);
   };
 
+  // which step should the user go back to for a server error?
+  const stepForError = (message) => {
+    const m = message.toLowerCase();
+    if (m.startsWith("admin and manager")) return 2;
+    if (m.includes(admin.email.trim().toLowerCase())) return 1;
+    if (m.includes(manager.email.trim().toLowerCase())) return 2;
+    if (m.includes("admin")) return 1;
+    if (m.includes("manager")) return 2;
+    return 0;
+  };
+
   const submit = async () => {
     if (saving) return;
     if (!confirm) return setFormError("Please confirm that the details are correct.");
     setSaving(true);
     try {
-      const res = await api("/auth/register-company", { method: "POST", body: { company, admin, manager } });
-      setResult(res);
+const res = await api("/auth/register-company", { method: "POST", body: { company, admin, manager, sendEmails } });      setResult(res);
     } catch (err) {
       setFormError(err.message);
-      setStep(err.message.startsWith("Admin") ? 1 : err.message.startsWith("Manager") ? 2 : 0);
+      setStep(stepForError(err.message));
     } finally {
       setSaving(false);
+    }
+  };
+
+  const copy = async (c) => {
+    try {
+      await navigator.clipboard.writeText(shareText(c, company.name));
+      setCopied(c.email);
+      setTimeout(() => setCopied(""), 2500);
+    } catch {
+      /* clipboard blocked */
     }
   };
 
@@ -105,6 +147,7 @@ export default function RegisterCompany() {
 
   /* ---------- success ---------- */
   if (result) {
+    const allEmailed = result.credentials.length === 0;
     return (
       <div className="lg-page rc-page">
         {shapes}
@@ -112,30 +155,60 @@ export default function RegisterCompany() {
           <div className="lg-card rc-card" role="status">
             <div className="fl-done">
               <span className="fl-done-icon"><FiCheckCircle /></span>
-              <h1>{result.company.name} is registered!</h1>
-              <p className="lg-hint">An invitation with a temporary password was created for:</p>
+              <h1>{company.name} is registered!</h1>
+              <p className="lg-hint">
+                {allEmailed
+                  ? "Invitation emails with a temporary password were sent to:"
+                  : "The company, admin and manager accounts were created for:"}
+              </p>
             </div>
             <ul className="rc-sent">
               {result.recipients.map((r) => (
-                <li key={r.email}><FiMail /><span><b>{r.role}</b> {r.name}<small>{maskEmail(r.email)}</small></span></li>
+                <li key={r.email}>
+                  <FiMail />
+                  <span>
+                    <b>{r.role}</b> {r.name}
+                    <small>{maskEmail(r.email)} · {r.emailed ? "Email sent" : "Email not sent"}</small>
+                  </span>
+                </li>
               ))}
             </ul>
+
+            {!allEmailed && (
+              <>
+                <p className="lg-hint">
+                  Real email is not connected, so share these login details yourself (for example on WhatsApp). The
+                  temporary passwords are shown only now and expire in 7 days.
+                </p>
+                <details className="rc-preview" open>
+                  <summary>Login details to share</summary>
+                  {result.credentials.map((c) => (
+                    <div className="rc-mail" key={c.email}>
+                      <b>{c.role}: {c.name}</b>
+                      <small>{c.email}</small>
+                      <pre>{shareText(c, company.name)}</pre>
+                      <div className="rc-nav">
+                        <button type="button" className="rc-back" onClick={() => copy(c)}>
+                          <FiCopy /> {copied === c.email ? "Copied" : "Copy"}
+                        </button>
+                        <a
+                          className="rc-back"
+                          target="_blank"
+                          rel="noreferrer"
+                          href={`https://wa.me/${c.role === "Admin" ? waNumber(admin.phone) : ""}?text=${encodeURIComponent(shareText(c, company.name))}`}
+                        >
+                          <FiMessageCircle /> WhatsApp
+                        </a>
+                      </div>
+                    </div>
+                  ))}
+                </details>
+              </>
+            )}
+
             <p className="lg-hint">
-              Open the invitation below, sign in with the temporary password and choose your own password. The temporary
-              password expires in 7 days.
+              Sign in with the temporary password and choose your own password on the first login.
             </p>
-
-            <details className="rc-preview" open>
-              <summary>Invitation emails (preview, real email is not connected yet)</summary>
-              {result.mails.map((m) => (
-                <div className="rc-mail" key={m.id}>
-                  <b>{m.subject}</b>
-                  <small>To: {m.to}</small>
-                  <pre>{m.body}</pre>
-                </div>
-              ))}
-            </details>
-
             <Link to="/login" className="lg-submit rc-go">Go to sign in <FiArrowRight className="lg-arrow" /></Link>
           </div>
         </main>
@@ -196,8 +269,8 @@ export default function RegisterCompany() {
                 <input id="a-name" name="name" value={admin.name} onChange={bind(admin, setAdmin, "a")} />{err("aname")}</div>
               <div className="rc-field"><label htmlFor="a-email">Admin email</label>
                 <input id="a-email" name="email" type="email" value={admin.email} onChange={bind(admin, setAdmin, "a")} />{err("aemail")}</div>
-              <div className="rc-field"><label htmlFor="a-phone">Phone (optional)</label>
-                <input id="a-phone" name="phone" value={admin.phone} onChange={bind(admin, setAdmin, "a")} /></div>
+              <div className="rc-field"><label htmlFor="a-phone">Phone / WhatsApp (optional)</label>
+                <input id="a-phone" name="phone" value={admin.phone} onChange={bind(admin, setAdmin, "a")} placeholder="077 123 4567" /></div>
             </div>
           )}
 
@@ -222,6 +295,11 @@ export default function RegisterCompany() {
                 <p>{company.phone} · {company.email}</p></section>
               <section><h3>Admin</h3><p><b>{admin.name}</b></p><p>{admin.email}</p></section>
               <section><h3>Manager</h3><p><b>{manager.name}</b> · {manager.department}</p><p>{manager.email}</p></section>
+
+              <label className="lg-check">
+                <input type="checkbox" checked={sendEmails} onChange={(e) => setSendEmails(e.target.checked)} />
+                <span>Send invitation emails to the admin and manager. If email is not available, you will get the login details to share yourself.</span>
+              </label>
               <label className="lg-check">
                 <input type="checkbox" checked={confirm} onChange={(e) => { setConfirm(e.target.checked); setFormError(""); }} />
                 <span>I confirm these details are correct and I am allowed to register this company.</span>

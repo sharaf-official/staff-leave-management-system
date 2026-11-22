@@ -176,7 +176,7 @@ function invitationMail(user, company, tempPassword, invitedBy) {
 
 ${invitedBy} has added you to ${company.name} as ${roleText} on Leave Nest.
 
-Sign in here: ${window.location.origin}/login
+Sign in here: ${window.location.origin}/#/login
 Email: ${user.email}
 Temporary password: ${tempPassword}
 

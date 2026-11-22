@@ -106,6 +106,7 @@ router.post("/register-company", async (req, res) => {
     const expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
     const mails = [];
     const recipients = [];
+    const credentials = [];
 
     for (const p of people) {
       const temp = tempPassword();
@@ -121,7 +122,7 @@ router.post("/register-company", async (req, res) => {
 
 ${cName} has been registered on Leave Nest and you are the ${p.role.toLowerCase()}.
 
-Sign in: ${origin}/login
+Sign in: ${origin}/#/login
 Email: ${p.email}
 Temporary password: ${temp}
 
@@ -133,7 +134,8 @@ You must change this password the first time you sign in. It is valid for 7 days
         [companyId, p.email, "invitation", subject, body]
       );
       mails.push({ id: m.insertId, to: p.email, subject, body });
-      recipients.push({ role: p.role, name: p.name, email: p.email });
+      recipients.push({ role: p.role, name: p.name, email: p.email, emailed: false });
+      credentials.push({ role: p.role, name: p.name, email: p.email, tempPassword: temp });
     }
 
     for (const [n, d] of [["Annual", 14], ["Sick", 7], ["Casual", 5]]) {
@@ -141,8 +143,8 @@ You must change this password the first time you sign in. It is valid for 7 days
     }
 
     await conn.commit();
-    res.status(201).json({ company: { id: companyId, name: cName }, recipients, mails });
-  } catch (err) {
+    res.status(201).json({ company: { id: companyId, name: cName }, recipients, credentials, mails });
+    } catch (err) {
     await conn.rollback();
     throw err;
   } finally {

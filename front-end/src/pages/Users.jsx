@@ -28,7 +28,7 @@ const shareText = (s) =>
 
 You have been added to Leave Nest.
 
-Sign in: ${window.location.origin}/login
+Sign in: ${window.location.origin}/#/login
 Email: ${s.email}
 Temporary password: ${s.tempPassword}
 

@@ -20,7 +20,6 @@ const menus = {
     { to: "/dashboard", label: "Dashboard", icon: <FiGrid /> },
     { to: "/apply", label: "Apply Leave", icon: <FiPlusCircle /> },
     { to: "/history", label: "My History", icon: <FiClock /> },
-    outboxLink,
     announceLink,
     holidayLink,
     outboxLink,

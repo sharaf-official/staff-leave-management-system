@@ -12,8 +12,9 @@ import notificationsRoutes from "./routes/notifications.js";
 import companyRoutes from "./routes/company.js";
 import announcementsRoutes from "./routes/announcements.js";
 import holidaysRoutes from "./routes/holidays.js";
+import registerCompanyRoutes from "./routes/registerCompany.js";
+
 const app = express();
-app.set("trust proxy", 1);
 app.set("trust proxy", 1);
 
 app.use(helmet());
@@ -45,6 +46,7 @@ app.use("/api/notifications", notificationsRoutes);
 app.use("/api/company", companyRoutes);
 app.use("/api/announcements", announcementsRoutes);
 app.use("/api/holidays", holidaysRoutes);
+app.use("/api/register-company", registerCompanyRoutes);
 
 app.use((err, _req, res, _next) => {
   console.error(err);
@@ -56,3 +58,5 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`API running on port ${PORT}`);
 });
+
+export default app;
