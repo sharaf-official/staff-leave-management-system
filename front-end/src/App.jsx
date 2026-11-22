@@ -20,6 +20,8 @@ import Profile from "./pages/Profile";
 import Announcements from "./pages/Announcements";
 import Holidays from "./pages/Holidays";
 import LoadingBar from "./components/LoadingBar";
+import LandingPage from "./pages/samplepage";
+
 
 const STAFF = ["employee", "manager"];
 const MANAGER = ["manager", "admin"];
@@ -52,6 +54,7 @@ export default function App() {
         <Route path="/leave-types" element={<ProtectedRoute roles={ADMIN}><LeaveTypes /></ProtectedRoute>} />
         <Route path="/reports" element={<ProtectedRoute roles={ADMIN}><Reports /></ProtectedRoute>} />
         <Route path="/company" element={<ProtectedRoute roles={ADMIN}><Company /></ProtectedRoute>} />
+        <Route path="/landing" element={<LandingPage />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
