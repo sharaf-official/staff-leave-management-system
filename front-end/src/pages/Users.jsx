@@ -6,7 +6,7 @@ import {
 } from "react-icons/fi";
 import { useAuth } from "../context/AuthContext";
 import { api } from "../api";
-import { generateTempPassword } from "../data/db";
+import { generateTempPassword } from "../data/demo";
 
 const today = () => new Date().toISOString().slice(0, 10);
 const blank = () => ({

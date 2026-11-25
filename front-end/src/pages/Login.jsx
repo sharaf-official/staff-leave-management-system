@@ -6,7 +6,7 @@ import {
   FiHeadphones, FiLayers, FiSend, FiCheckSquare, FiBarChart2, FiGlobe,
 } from "react-icons/fi";
 import { useAuth } from "../context/AuthContext";
-import { DEMO_ACCOUNTS } from "../data/db";
+import { DEMO_ACCOUNTS } from "../data/demo";
 import Logo from "../components/Logo";
 
 const REMEMBER_KEY = "remembered-email";
